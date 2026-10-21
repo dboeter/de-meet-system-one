@@ -1,0 +1,768 @@
+{
+  "model": "jev-1.13.0",
+  "cases": 123,
+  "tasks": [
+    {
+      "task": "intent",
+      "total": 47,
+      "excluded": 2,
+      "regexCorrect": 19,
+      "jevCorrect": 47,
+      "jevMissing": 0,
+      "jevReview": 0
+    },
+    {
+      "task": "flags",
+      "total": 190,
+      "excluded": 5,
+      "regexCorrect": 159,
+      "jevCorrect": 186,
+      "jevMissing": 0,
+      "jevReview": 4
+    },
+    {
+      "task": "triage-department",
+      "total": 33,
+      "excluded": 2,
+      "regexCorrect": 19,
+      "jevCorrect": 33,
+      "jevMissing": 0,
+      "jevReview": 0
+    },
+    {
+      "task": "triage-urgency",
+      "total": 33,
+      "excluded": 2,
+      "regexCorrect": 25,
+      "jevCorrect": 32,
+      "jevMissing": 0,
+      "jevReview": 0
+    }
+  ],
+  "repeatNoise": {
+    "intent": {
+      "items": 10,
+      "flipped": 0,
+      "maxDelta": 0.16000000000000003
+    },
+    "flags": {
+      "items": 39,
+      "flipped": 2,
+      "maxDelta": 0.07000000000000006
+    },
+    "triage-department": {
+      "items": 35,
+      "flipped": 0,
+      "maxDelta": 0.030000000000000027
+    },
+    "triage-urgency": {
+      "items": 35,
+      "flipped": 0,
+      "maxDelta": 0.07000000000000006
+    }
+  },
+  "againstNoise": [
+    {
+      "task": "intent",
+      "kind": "compared",
+      "gap": 28,
+      "noise": 14,
+      "beyondNoise": true
+    },
+    {
+      "task": "flags",
+      "kind": "compared",
+      "gap": 27,
+      "noise": 33,
+      "beyondNoise": false
+    },
+    {
+      "task": "triage-department",
+      "kind": "compared",
+      "gap": 14,
+      "noise": 4,
+      "beyondNoise": true
+    },
+    {
+      "task": "triage-urgency",
+      "kind": "compared",
+      "gap": 7,
+      "noise": 4,
+      "beyondNoise": true
+    }
+  ],
+  "disagreements": [
+    {
+      "id": "preset-came-through",
+      "task": "intent",
+      "text": "The refund came through yesterday, thanks!",
+      "gold": "praise",
+      "regex": "refund",
+      "jev": "praise"
+    },
+    {
+      "id": "preset-money-back",
+      "task": "intent",
+      "text": "Give me back what I paid, this thing is useless.",
+      "gold": "refund",
+      "regex": "complaint",
+      "jev": "refund"
+    },
+    {
+      "id": "preset-negation",
+      "task": "intent",
+      "text": "I don't want a refund, just send one that works.",
+      "gold": "exchange",
+      "regex": "refund",
+      "jev": "exchange"
+    },
+    {
+      "id": "preset-sarcasm",
+      "task": "intent",
+      "text": "Great, thanks for shipping it to the wrong city.",
+      "gold": "complaint",
+      "regex": "praise",
+      "jev": "complaint"
+    },
+    {
+      "id": "preset-policy",
+      "task": "intent",
+      "text": "Can I get my money back if it's still sealed?",
+      "gold": "question",
+      "regex": "refund",
+      "jev": "question"
+    },
+    {
+      "id": "preset-dont-cancel",
+      "task": "intent",
+      "text": "Please don't cancel my subscription, I only wanted to know when it renews.",
+      "gold": "question",
+      "regex": "cancel",
+      "jev": "question"
+    },
+    {
+      "id": "preset-typo",
+      "task": "intent",
+      "text": "pls refnd order 4471",
+      "gold": "refund",
+      "regex": "other",
+      "jev": "refund"
+    },
+    {
+      "id": "refund-card",
+      "task": "intent",
+      "text": "Can you put the money for order 3310 back on my card?",
+      "gold": "refund",
+      "regex": "question",
+      "jev": "refund"
+    },
+    {
+      "id": "refund-credit-visa",
+      "task": "intent",
+      "text": "Credit the $40 back to my Visa, the dress never arrived.",
+      "gold": "refund",
+      "regex": "other",
+      "jev": "refund"
+    },
+    {
+      "id": "refund-long",
+      "task": "intent",
+      "text": "Hello, I ordered the walnut desk (order 6650) and it arrived with a split leg. I've attached photos. I'd rather not wait for a replacement, so please just return the money to my card.",
+      "gold": "refund",
+      "regex": "other",
+      "jev": "refund"
+    },
+    {
+      "id": "refund-typo",
+      "task": "intent",
+      "text": "i need my mony bak, the item never came",
+      "gold": "refund",
+      "regex": "other",
+      "jev": "refund"
+    },
+    {
+      "id": "exchange-not-refund",
+      "task": "intent",
+      "text": "The mug arrived chipped. I'd like a new one sent out, not a refund.",
+      "gold": "exchange",
+      "regex": "refund",
+      "jev": "exchange"
+    },
+    {
+      "id": "exchange-size",
+      "task": "intent",
+      "text": "The shirt is a size too small, could you send me a large instead?",
+      "gold": "exchange",
+      "regex": "question",
+      "jev": "exchange"
+    },
+    {
+      "id": "exchange-colour",
+      "task": "intent",
+      "text": "Wrong colour arrived. Swap it for the blue one please.",
+      "gold": "exchange",
+      "regex": "other",
+      "jev": "exchange"
+    },
+    {
+      "id": "exchange-repair",
+      "task": "intent",
+      "text": "My watch stopped working after two weeks. Can you repair it under warranty?",
+      "gold": "exchange",
+      "regex": "question",
+      "jev": "exchange"
+    },
+    {
+      "id": "cancel-stop-charging",
+      "task": "intent",
+      "text": "Please stop charging my card every month, I'm done with this service.",
+      "gold": "cancel",
+      "regex": "other",
+      "jev": "cancel"
+    },
+    {
+      "id": "cancel-typo",
+      "task": "intent",
+      "text": "i want to cancle my membrship",
+      "gold": "cancel",
+      "regex": "other",
+      "jev": "cancel"
+    },
+    {
+      "id": "complaint-courier",
+      "task": "intent",
+      "text": "Waited in for the courier all day and nobody showed up.",
+      "gold": "complaint",
+      "regex": "other",
+      "jev": "complaint"
+    },
+    {
+      "id": "complaint-love-late",
+      "task": "intent",
+      "text": "Love how my package is now three weeks late. Great job.",
+      "gold": "complaint",
+      "regex": "question",
+      "jev": "complaint"
+    },
+    {
+      "id": "complaint-thanks-for-nothing",
+      "task": "intent",
+      "text": "Thanks for nothing. Second time the app logged me out mid-order.",
+      "gold": "complaint",
+      "regex": "praise",
+      "jev": "complaint"
+    },
+    {
+      "id": "question-refund-policy",
+      "task": "intent",
+      "text": "What is your refund policy for opened items?",
+      "gold": "question",
+      "regex": "refund",
+      "jev": "question"
+    },
+    {
+      "id": "question-cancel-access",
+      "task": "intent",
+      "text": "If I cancel now, do I still keep access until the end of the month?",
+      "gold": "question",
+      "regex": "cancel",
+      "jev": "question"
+    },
+    {
+      "id": "question-dont-cancel-order",
+      "task": "intent",
+      "text": "Don't cancel my order, I still want it, just tell me when it ships.",
+      "gold": "question",
+      "regex": "cancel",
+      "jev": "question"
+    },
+    {
+      "id": "question-damaged-discount",
+      "task": "intent",
+      "text": "Is the damaged-box discount still available for my order?",
+      "gold": "question",
+      "regex": "complaint",
+      "jev": "question"
+    },
+    {
+      "id": "praise-cancel-done",
+      "task": "intent",
+      "text": "I asked you to cancel last week and you did. Thanks!",
+      "gold": "praise",
+      "regex": "cancel",
+      "jev": "praise"
+    },
+    {
+      "id": "praise-money-back-fast",
+      "task": "intent",
+      "text": "Got my money back within a day, really impressed.",
+      "gold": "praise",
+      "regex": "refund",
+      "jev": "praise"
+    },
+    {
+      "id": "praise-not-terrible",
+      "task": "intent",
+      "text": "I thought it would be terrible but it's honestly the best purchase this year.",
+      "gold": "praise",
+      "regex": "complaint",
+      "jev": "praise"
+    },
+    {
+      "id": "other-partnership",
+      "task": "intent",
+      "text": "Hi, we're a marketing agency and would love to partner with your brand.",
+      "gold": "other",
+      "regex": "praise",
+      "jev": "other"
+    },
+    {
+      "id": "flags-preset-bot",
+      "task": "flags:wants_human",
+      "text": "Are you a bot? I've been going round in circles with this chat for twenty minutes.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-preset-not-a-lawyer",
+      "task": "flags:asks_refund_now",
+      "text": "I'm not a lawyer, but charging me again after I cancelled seems wrong. Please reverse it.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-preset-not-a-lawyer",
+      "task": "flags:repeat_contact",
+      "text": "I'm not a lawyer, but charging me again after I cancelled seems wrong. Please reverse it.",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-preset-not-a-lawyer",
+      "task": "flags:legal_or_chargeback_threat",
+      "text": "I'm not a lawyer, but charging me again after I cancelled seems wrong. Please reverse it.",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-preset-third-time",
+      "task": "flags:wants_human",
+      "text": "Third time writing about this and still nothing. Get me someone who can actually fix it.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "review"
+    },
+    {
+      "id": "flags-preset-third-time",
+      "task": "flags:repeat_contact",
+      "text": "Third time writing about this and still nothing. Get me someone who can actually fix it.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-preset-manager",
+      "task": "flags:wants_human",
+      "text": "My manager asked me to order 40 more of these. Can you send a quote for next month?",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-lawyer-refund",
+      "task": "flags:asks_refund_now",
+      "text": "My lawyer will be in touch unless you refund the full amount.",
+      "gold": "yes",
+      "regex": "yes",
+      "jev": "review"
+    },
+    {
+      "id": "flags-reverse-charge",
+      "task": "flags:asks_refund_now",
+      "text": "Reverse the charge on my card please, I never ordered this.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-reverse-charge",
+      "task": "flags:legal_or_chargeback_threat",
+      "text": "Reverse the charge on my card please, I never ordered this.",
+      "gold": "no",
+      "regex": "no",
+      "jev": "review"
+    },
+    {
+      "id": "flags-refund-came",
+      "task": "flags:asks_refund_now",
+      "text": "The refund came through, thanks for sorting it.",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-refund-policy",
+      "task": "flags:asks_refund_now",
+      "text": "What's your refund policy on sale items?",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-someone-there",
+      "task": "flags:wants_human",
+      "text": "Can I speak to someone who actually works there?",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-agent-maria",
+      "task": "flags:wants_human",
+      "text": "Your agent Maria was lovely, please pass on my thanks.",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-are-you-a-person",
+      "task": "flags:wants_human",
+      "text": "Are you even a person? Every reply I get is the same template.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-hooman",
+      "task": "flags:wants_human",
+      "text": "pls get me a hooman, the bot keeps looping",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-written-three-times",
+      "task": "flags:repeat_contact",
+      "text": "I've written three times now and still no reply.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-waiting-monday",
+      "task": "flags:repeat_contact",
+      "text": "Still waiting for an answer to my email from Monday about the missing parcel.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-phone-yesterday",
+      "task": "flags:repeat_contact",
+      "text": "We spoke on the phone yesterday and you promised a callback that never came.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "review"
+    },
+    {
+      "id": "flags-buy-again",
+      "task": "flags:repeat_contact",
+      "text": "Love it, will definitely buy again!",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-trading-standards",
+      "task": "flags:legal_or_chargeback_threat",
+      "text": "I'll be reporting this to Trading Standards.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-dispute-bank",
+      "task": "flags:legal_or_chargeback_threat",
+      "text": "I'm going to dispute this with my bank if it's not sorted today.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-legal-batteries",
+      "task": "flags:legal_or_chargeback_threat",
+      "text": "Is it legal to ship lithium batteries to Ireland?",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-not-sue",
+      "task": "flags:legal_or_chargeback_threat",
+      "text": "I'm not going to sue anyone, I just want the right size sent.",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-amazon",
+      "task": "flags:cancellation_risk",
+      "text": "Honestly, I'll just order from Amazon next time.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-lost-customer",
+      "task": "flags:cancellation_risk",
+      "text": "One more mistake like this and you've lost a customer.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-switch-annual",
+      "task": "flags:cancellation_risk",
+      "text": "Can I switch to the annual plan to save money?",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-dont-cancel",
+      "task": "flags:cancellation_risk",
+      "text": "Please don't cancel my order, I still want it.",
+      "gold": "no",
+      "regex": "yes",
+      "jev": "no"
+    },
+    {
+      "id": "flags-third-email-bank",
+      "task": "flags:repeat_contact",
+      "text": "Third email this week. I want a human and I want my money back, or I'm calling my bank.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-third-email-bank",
+      "task": "flags:legal_or_chargeback_threat",
+      "text": "Third email this week. I want a human and I want my money back, or I'm calling my bank.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-money-elsewhere",
+      "task": "flags:cancellation_risk",
+      "text": "Put the money back on my card or I'll take my business elsewhere.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-ombudsman",
+      "task": "flags:asks_refund_now",
+      "text": "You charged me after I cancelled. Credit it back or I'll report you to the ombudsman.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "flags-ombudsman",
+      "task": "flags:legal_or_chargeback_threat",
+      "text": "You charged me after I cancelled. Credit it back or I'll report you to the ombudsman.",
+      "gold": "yes",
+      "regex": "no",
+      "jev": "yes"
+    },
+    {
+      "id": "triage-preset-charged-twice",
+      "task": "triage-department",
+      "text": "I was charged twice for a package that never came.",
+      "gold": "billing",
+      "regex": "shipping",
+      "jev": "billing"
+    },
+    {
+      "id": "triage-preset-wedding",
+      "task": "triage-department",
+      "text": "Hi! The dress for my sister's wedding on Saturday still says 'label created'. Could you check where it is?",
+      "gold": "shipping",
+      "regex": "other",
+      "jev": "shipping"
+    },
+    {
+      "id": "triage-preset-wedding",
+      "task": "triage-urgency",
+      "text": "Hi! The dress for my sister's wedding on Saturday still says 'label created'. Could you check where it is?",
+      "gold": "urgent",
+      "regex": "not urgent",
+      "jev": "urgent"
+    },
+    {
+      "id": "triage-preset-shouting",
+      "task": "triage-urgency",
+      "text": "THIS IS RIDICULOUS!!! The new logo is hideous and I want everyone to know it!!!",
+      "gold": "not urgent",
+      "regex": "urgent",
+      "jev": "not urgent"
+    },
+    {
+      "id": "triage-preset-swap",
+      "task": "triage-department",
+      "text": "The jacket is lovely but a size too small. Can I swap it for a large?",
+      "gold": "returns",
+      "regex": "other",
+      "jev": "returns"
+    },
+    {
+      "id": "triage-party-tonight",
+      "task": "triage-department",
+      "text": "I need the replacement today, the party is tonight!!",
+      "gold": "returns",
+      "regex": "other",
+      "jev": "returns"
+    },
+    {
+      "id": "triage-declined-midnight",
+      "task": "triage-urgency",
+      "text": "My payment keeps getting declined at checkout and the sale ends at midnight.",
+      "gold": "urgent",
+      "regex": "not urgent",
+      "jev": "urgent"
+    },
+    {
+      "id": "triage-wrong-house",
+      "task": "triage-department",
+      "text": "The courier left my order at the wrong house.",
+      "gold": "shipping",
+      "regex": "other",
+      "jev": "shipping"
+    },
+    {
+      "id": "triage-three-weeks",
+      "task": "triage-department",
+      "text": "It's been three weeks and the order still hasn't turned up.",
+      "gold": "shipping",
+      "regex": "other",
+      "jev": "shipping"
+    },
+    {
+      "id": "triage-boots-money",
+      "task": "triage-department",
+      "text": "I sent the boots back two weeks ago and still haven't seen my money.",
+      "gold": "billing",
+      "regex": "other",
+      "jev": "billing"
+    },
+    {
+      "id": "triage-profile",
+      "task": "triage-department",
+      "text": "I can't get into my profile, it says my email isn't recognised.",
+      "gold": "account",
+      "regex": "other",
+      "jev": "account"
+    },
+    {
+      "id": "triage-took-twice",
+      "task": "triage-department",
+      "text": "You took £49.99 from my card twice this month.",
+      "gold": "billing",
+      "regex": "other",
+      "jev": "billing"
+    },
+    {
+      "id": "triage-toaster",
+      "task": "triage-department",
+      "text": "Wrong item delivered: I ordered a kettle and got a toaster.",
+      "gold": "returns",
+      "regex": "shipping",
+      "jev": "returns"
+    },
+    {
+      "id": "triage-arrived-thanks",
+      "task": "triage-department",
+      "text": "My package arrived today, thanks, all good.",
+      "gold": "other",
+      "regex": "shipping",
+      "jev": "other"
+    },
+    {
+      "id": "triage-arrived-thanks",
+      "task": "triage-urgency",
+      "text": "My package arrived today, thanks, all good.",
+      "gold": "not urgent",
+      "regex": "urgent",
+      "jev": "not urgent"
+    },
+    {
+      "id": "triage-address-tomorrow",
+      "task": "triage-urgency",
+      "text": "I need to update my delivery address before it ships tomorrow.",
+      "gold": "urgent",
+      "regex": "not urgent",
+      "jev": "urgent"
+    },
+    {
+      "id": "triage-insulin",
+      "task": "triage-department",
+      "text": "My insulin cooler was meant to arrive yesterday and the medicine spoils without it.",
+      "gold": "shipping",
+      "regex": "other",
+      "jev": "shipping"
+    },
+    {
+      "id": "triage-insulin",
+      "task": "triage-urgency",
+      "text": "My insulin cooler was meant to arrive yesterday and the medicine spoils without it.",
+      "gold": "urgent",
+      "regex": "not urgent",
+      "jev": "urgent"
+    },
+    {
+      "id": "triage-login-code",
+      "task": "triage-department",
+      "text": "The login code never arrived on my phone, so I'm locked out.",
+      "gold": "account",
+      "regex": "shipping",
+      "jev": "account"
+    },
+    {
+      "id": "triage-login-code",
+      "task": "triage-urgency",
+      "text": "The login code never arrived on my phone, so I'm locked out.",
+      "gold": "not urgent",
+      "regex": "not urgent",
+      "jev": "urgent"
+    },
+    {
+      "id": "triage-audit-tomorrow",
+      "task": "triage-urgency",
+      "text": "Our accounts team needs a corrected invoice before the audit tomorrow morning.",
+      "gold": "urgent",
+      "regex": "not urgent",
+      "jev": "urgent"
+    },
+    {
+      "id": "triage-heater",
+      "task": "triage-department",
+      "text": "The heater stopped working and it's freezing here, can I get a replacement quickly?",
+      "gold": "returns",
+      "regex": "other",
+      "jev": "returns"
+    },
+    {
+      "id": "triage-heater",
+      "task": "triage-urgency",
+      "text": "The heater stopped working and it's freezing here, can I get a replacement quickly?",
+      "gold": "urgent",
+      "regex": "not urgent",
+      "jev": "urgent"
+    }
+  ]
+}

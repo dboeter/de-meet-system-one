@@ -1,0 +1,36 @@
+# Semantic data-quality checks for the silver layer (station 1).
+#
+# A Noul check is a predicate on the value: it is read as "Does `value` pass this check: it <check>?".
+# A Choice check maps the value to one code; picking `other` counts as failing.
+# action: warn (rejected rows only counted) | quarantine (rejected rows always go to the
+#         quarantine table) | fail_run (as quarantine, and the run fails closed when triggered).
+# max_fail_rate: share of rows Jev rejects above which the check is triggered in the manifest.
+
+checks:
+  - id: address_is_postal
+    column: address
+    kind: noul
+    check: is a postal address (street + number, optionally postcode/city)
+    max_fail_rate: 0.50
+    action: quarantine
+
+  - id: description_names_product
+    column: product_description
+    kind: noul
+    check: describes the product itself, not a pointer elsewhere such as "zie mail" or "idem"
+    max_fail_rate: 0.10
+    action: fail_run
+
+  - id: cancel_reason_code
+    column: cancel_reason
+    kind: choice
+    check: Which cancellation code does `value` describe?
+    codes:
+      TOO_EXPENSIVE: price too high, or a cheaper alternative
+      DELIVERY_LATE: delivery late, missed or too slow
+      WRONG_OR_DAMAGED: wrong item, size or colour, or damaged on arrival
+      NO_LONGER_NEEDED: need disappeared, duplicate order, project or budget stopped
+      SWITCHED_SUPPLIER: moved to another supplier or contract
+      other: none of the codes fit, or no reason given
+    max_fail_rate: 0.30
+    action: warn

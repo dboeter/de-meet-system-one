@@ -1,0 +1,31 @@
+target_col,type,description
+customer.customer_id,integer,Unique customer number
+customer.full_name,string,Customer's full name as written
+customer.first_name,string,Given name
+customer.last_name,string,Family name including infixes
+customer.birth_date,date,Date of birth
+customer.email,string,Primary email address
+customer.phone,string,Primary phone number
+customer.street,string,Street name of the billing address
+customer.house_number,string,House number including addition
+customer.postcode,string,Postcode of the billing address
+customer.city,string,City of the billing address
+customer.company_name,string,Registered company name for business customers
+customer.chamber_of_commerce_id,string,KvK number for business customers
+customer.is_active,boolean,Whether the customer account is active
+customer.created_at,timestamp,When the customer record was created
+customer.updated_at,timestamp,When the customer record was last changed
+order.order_id,integer,Unique order number
+order.customer_id,integer,Customer who placed the order
+order.order_date,date,Date the order was placed
+order.delivery_date,date,Date the order was delivered
+order.amount_excl_vat,decimal,Order amount excluding VAT in euros
+order.vat_amount,decimal,VAT amount in euros
+order.shipping_cost,decimal,Shipping cost in euros
+order.discount_amount,decimal,Discount applied in euros
+order.status,string,"Order status: open, shipped, delivered, cancelled"
+invoice.invoice_id,integer,Unique invoice number
+invoice.invoice_date,date,Date the invoice was sent
+invoice.amount_incl_vat,decimal,Invoice total including VAT in euros
+product.product_name,string,Name of the product
+product.unit_price,decimal,Price per unit in euros

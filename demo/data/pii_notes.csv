@@ -1,0 +1,23 @@
+id,text,person_name,health,financial,address,special_category
+N01,mijn buurvrouw mevrouw de Vries heeft diabetes en kan de pakketten niet zelf ophalen,true,true,false,false,false
+N02,Klant wil levering op vrijdag in plaats van donderdag.,false,false,false,false,false
+N03,Graag terugbellen op 06-12345678 over de factuur.,false,false,false,false,false
+N04,"Klant heeft betalingsachterstand van drie maanden, regeling getroffen met deurwaarder.",false,false,true,false,false
+N05,Pakket afgeven bij de achterburen op Lindelaan 14 in Ede als niemand thuis is.,false,false,false,true,false
+N06,Mevrouw Bakker vraagt of we op zondag niet bezorgen vanwege haar geloof.,true,false,false,false,true
+N07,BSN ter verificatie: 111222333,false,false,false,false,false
+N08,Product werkte niet na de update; firmware opnieuw geïnstalleerd.,false,false,false,false,false
+N09,Terugstorting graag op NL91 ABNA 0417 1643 00.,false,false,false,false,false
+N10,Klant is sinds maart in de bijstand en vraagt om uitstel.,false,false,true,false,false
+N11,Collega Pieter heeft de klacht overgenomen.,true,false,false,false,false
+N12,"Meneer is slechthorend, dus liever mailen dan bellen.",false,true,false,false,false
+N13,Vraag over de btw op factuur 2024-0193.,false,false,false,false,false
+N14,"De klant woont in het blauwe huis naast de kerk in Garderen, achterdeur gebruiken.",false,false,false,true,false
+N15,Philips heeft de levering van de monitoren uitgesteld.,false,false,false,false,false
+N16,Klant gaf aan lid te zijn van de FNV en wil de vakbond erbij betrekken.,false,false,false,false,true
+N17,Zoon belde namens zijn vader die na een beroerte in het verpleeghuis ligt.,false,true,false,false,false
+N18,"Graag contact via j.devries@example.nl, niet via telefoon.",false,false,false,false,false
+N19,De wethouder van Ede opende vandaag het nieuwe distributiecentrum.,false,false,false,false,false
+N20,"Jeroen van Dijk, die net gescheiden is, kan de huur niet meer betalen.",true,false,true,false,false
+N21,Retourlabel opnieuw verstuurd naar het opgegeven adres.,false,false,false,false,false
+N22,Klant vroeg of het product halal is.,false,false,false,false,false

@@ -1,0 +1,13 @@
+id_a,id_b,note
+A01,B01,department of the same municipality
+A03,B03,name change
+A04,B04,trading name; same KvK
+A06,B06,English trading name
+A07,B07,same IBAN
+A08,B08,spelling variant
+A10,B10,local branch of the cooperative
+A12,B12,department; blocking never pairs them
+A13,B13,name change
+A16,B16,name change
+A17,B17,same KvK
+A18,B18,spelling variant

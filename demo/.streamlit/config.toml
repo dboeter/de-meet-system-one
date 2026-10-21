@@ -1,0 +1,45 @@
+# Theme for app/streamlit_app.py: the "achromatic ledger" style. Ink chrome, one blue on data,
+# status colours only on accept / review / reject.
+
+[client]
+toolbarMode = "minimal"
+
+[server]
+headless = true
+
+[browser]
+gatherUsageStats = false
+
+[theme]
+base = "light"
+primaryColor = "#141414"
+backgroundColor = "#ffffff"
+secondaryBackgroundColor = "#f2f4f7"
+textColor = "#0a0a0a"
+linkColor = "#1d5fbf"
+linkUnderline = false
+borderColor = "#e6e6e6"
+dataframeBorderColor = "#f0f0f0"
+dataframeHeaderBackgroundColor = "#ffffff"
+showWidgetBorder = true
+baseRadius = "8px"
+buttonRadius = "6px"
+baseFontSize = 15
+font = "Geist:https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&display=swap"
+codeFont = "Geist Mono:https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;500&display=swap"
+codeFontSize = "13px"
+codeTextColor = "#0a0a0a"
+codeBackgroundColor = "#f0f0f0"
+paddingTop = "2.5rem"
+headingFontSizes = ["28px", "18px", "15px"]
+headingFontWeights = [600, 600, 600]
+metricValueFontSize = "30px"
+metricValueFontWeight = 500
+greenColor = "#2e7d32"
+redColor = "#c4242a"
+orangeColor = "#92400e"
+blueColor = "#1d5fbf"
+
+[theme.sidebar]
+backgroundColor = "#f2f4f7"
+secondaryBackgroundColor = "#e8ebf0"

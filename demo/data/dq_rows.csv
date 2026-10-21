@@ -1,0 +1,31 @@
+row_id,address,is_address,product_description,is_product_description,cancel_reason,cancel_code
+1,"Damrak 1, 1012 LG Amsterdam",true,"Bureaustoel ergonomisch, zwart, verstelbare armleuningen",true,te duur geworden,TOO_EXPENSIVE
+2,"Coolsingel 40, 3011 AD Rotterdam",true,zie mail,false,levering kwam twee weken te laat,DELIVERY_LATE
+3,"Keizersgracht 123-H, Amsterdam",true,"Laptop 14 inch, 16 GB RAM, 512 GB SSD",true,verkeerde maat ontvangen,WRONG_OR_DAMAGED
+4,Stationsplein 1,true,"Printerpapier A4 80 g/m², 5 pakken",true,hebben het niet meer nodig,NO_LONGER_NEEDED
+5,"t.a.v. dhr. Jansen, Lange Voorhout 9, 2514 EA Den Haag",true,zie offerte,false,overgestapt naar andere leverancier,SWITCHED_SUPPLIER
+6,"Rue de la Loi 16, 1000 Brussel",true,Monitorarm voor twee schermen,true,prijs,TOO_EXPENSIVE
+7,"Oudegracht 231bis, 3511 NK Utrecht",true,Koffiebonen biologisch 1 kg,true,doos was kapot bij aankomst,WRONG_OR_DAMAGED
+8,"Damrak 1, 1012 LG Amsterdam",true,idem,false,project geannuleerd,NO_LONGER_NEEDED
+9,"Coolsingel 40, 3011 AD Rotterdam",true,USB-C dockingstation met HDMI,true,te duur geworden,TOO_EXPENSIVE
+10,+31 20 555 0134,false,Bureaulamp LED dimbaar,true,concurrent was goedkoper,TOO_EXPENSIVE
+11,06-12345678,false,zoals besproken met Petra,false,"klant belde, zie notitie",other
+12,zie mail,false,Whiteboard 120x90 magnetisch,true,asdf,other
+13,info@leverancier.nl,false,Kabelgoot wit 2 m,true,bezorger kwam niet opdagen,DELIVERY_LATE
+14,onbekend,false,-,false,dubbel besteld,NO_LONGER_NEEDED
+15,Kerkstraat,false,Headset met ruisonderdrukking,true,hebben het niet meer nodig,NO_LONGER_NEEDED
+16,1012 LG,false,"Archiefdozen karton, 50 stuks",true,kwaliteit viel tegen,other
+17,"Postbus 1200, 3000 BE Rotterdam",false,"Toetsenbord draadloos, QWERTY",true,verkeerde kleur geleverd,WRONG_OR_DAMAGED
+18,bovenwoning naast de bakker,false,nvt,false,budget bevroren,NO_LONGER_NEEDED
+19,Amsterdam,false,"Ergonomische muis, rechtshandig",true,te laat,DELIVERY_LATE
+20,-,false,Vergadertafel eiken 240 cm,true,"nieuwe inkoper, eigen leveranciers",SWITCHED_SUPPLIER
+21,06-12345678,false,"Laptop 14 inch, 16 GB RAM, 512 GB SSD",true,te duur geworden,TOO_EXPENSIVE
+22,zie mail,false,zie mail,false,-,other
+23,Herengracht 502,true,"Waterkoker RVS 1,7 l",true,product beschadigd,WRONG_OR_DAMAGED
+24,"Hoofdweg 12a, Zwolle",true,Plantenbak met kunstplant,true,levering kwam twee weken te laat,DELIVERY_LATE
+25,Graaf Florisstraat 3 (achterom),true,"Bureaustoel ergonomisch, zwart, verstelbare armleuningen",true,geen reden opgegeven,other
+26,"bel eerst: 010-4123456, Witte de Withstraat 8",true,Thinkpad zoals vorige keer,false,ander contract via moederbedrijf,SWITCHED_SUPPLIER
+27,NL91ABNA0417164300,false,"Flipover-papier, 5 blokken",true,prijs,TOO_EXPENSIVE
+28,"Damrak 1, 1012 LG Amsterdam",true,"Printerpapier A4 80 g/m², 5 pakken",true,dubbel besteld,NO_LONGER_NEEDED
+29,zelfde als factuuradres,false,Schermfilter privacy 14 inch,true,wachttijd te lang,DELIVERY_LATE
+30,"Molenweg, naast nummer 4",false,Koffiebonen biologisch 1 kg,true,verkeerde maat ontvangen,WRONG_OR_DAMAGED

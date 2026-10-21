@@ -1,0 +1,26 @@
+[project]
+name = "jevdemo"
+version = "0.1.0"
+requires-python = ">=3.13"
+dependencies = [
+    "pandas>=3.0.6",
+    "python-dotenv>=1.2.4",
+    "pyyaml==6.0.3",
+    "streamlit==1.66.0",
+    "typesafe-sdk==0.7.4",
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=7.4.0",
+    "nbclient>=0.11.0",
+    "nbformat>=5.11.1",
+    "pytest>=9.1.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff.lint.isort]
+known-first-party = ["jevdemo", "ui"]  # ui: app/ui.py, importable because Streamlit puts app/ on sys.path
