@@ -26,3 +26,11 @@ def test_page_renders_from_recordings(page, monkeypatch):
     at.button[0].click().run()  # the preset in "Your turn" is recorded
     assert not at.exception
     assert not at.warning
+
+
+def test_lessons_page_renders_the_doc():
+    at = AppTest.from_file(str(APP), default_timeout=60)
+    at.run()
+    at.switch_page("lessons.py").run()
+    assert not at.exception
+    assert "# Lessons learned" in at.markdown[0].value

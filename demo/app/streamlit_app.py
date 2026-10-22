@@ -17,7 +17,8 @@ page = st.navigation(
             st.Page("stations/schema.py", title="Schema mapping"),
             st.Page("stations/schema_noul.py", title="Schema mapping (yes/no)"),
             st.Page("stations/pii.py", title="PII screening"),
-        ]
+        ],
+        "Notes": [st.Page("lessons.py", title="Lessons learned")],
     }
 )
 ui.sidebar()
