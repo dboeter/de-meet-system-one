@@ -25,7 +25,7 @@ Rule 2 was already met everywhere: every question, including the ones with opaqu
 | Schema: the source system in state (`source_system`) | 1 | 76% top-1, 60% pre-filled | 80% top-1, 60% pre-filled | yes |
 | Schema: both | 1, 4 | 76% top-1, 60% pre-filled, 1 wrong | 80%, 64%, none wrong | yes |
 | DQ address: "one specific building, its own house number" instead of "street + number, optionally postcode/city" | 4 | lowest true row 0.68, 5 rows in review | 0.87, 3 rows | yes |
-| DQ cancel reason: a pass/fail Noul plus a code Choice instead of `1 - p(other)` | 3 | lowest true row 0.94, 1 row in review | 0.67, 7 rows | no |
+| DQ cancel reason: a pass/fail Noul plus a code Choice instead of `1 - p(other)` | 3 | lowest true row 0.58, 8 rows in review | 0.40, 11 rows | no |
 
 The rejected wordings stay recorded and runnable: `checks_variants.yaml` for DQ,
 `schema.VARIANTS` for schema mapping. Both notebooks show them side by side with the
@@ -57,11 +57,19 @@ things (cents versus euros), so the two aren't a clean comparison.
 from scoring separate blocks of one input. Our cancel check is different: it picks one of a
 few mutually exclusive codes, and the Choice's `other` probability already separated
 pass from fail sharply. The separate Noul was less sure of plain reasons
-(`wachttijd te lang` 0.67, `bezorger kwam niet opdagen` 0.76).
+(`wachttijd te lang` 0.40, `bezorger kwam niet opdagen` 0.63).
 
 **Measure the margin, not just accuracy.** Every DQ variant decided all auto-decided rows
 correctly, so accuracy couldn't tell them apart. The gap between the lowest true row and
 the highest false row, and the number of rows left in review, could.
+
+**Describe the category, never the test rows.** The cancel codes used to read like the data
+("a cheaper alternative", "duplicate order, project or budget stopped", "no reason given"),
+and the product check named `zie mail` and `idem`, values it then judged. With category
+descriptions instead, every row still lands on the right side, but the cancel check's lowest
+true row fell from 0.94 to 0.58 and review grew from 1 row to 8. That is the honest margin.
+The one boundary added afterwards ("their own plans or funding changed or it was ordered by
+mistake") describes the class, not a row; without it three rows took the wrong code.
 
 ## How to run the next experiment
 

@@ -26,11 +26,11 @@ checks:
     check: gives a cancellation reason that fits one of `codes`
     question: Which cancellation code does `value` describe?
     codes:
-      TOO_EXPENSIVE: price too high, or a cheaper alternative
-      DELIVERY_LATE: delivery late, missed or too slow
-      WRONG_OR_DAMAGED: wrong item, size or colour, or damaged on arrival
-      NO_LONGER_NEEDED: need disappeared, duplicate order, project or budget stopped
-      SWITCHED_SUPPLIER: moved to another supplier or contract
-      other: none of the codes fit, or no reason given
+      TOO_EXPENSIVE: the price or cost was the reason
+      DELIVERY_LATE: the delivery did not arrive on time
+      WRONG_OR_DAMAGED: what arrived was not what was ordered, or was damaged
+      NO_LONGER_NEEDED: the buyer no longer needs or wants what was ordered, because their own plans or funding changed or it was ordered by mistake
+      SWITCHED_SUPPLIER: the buyer now gets it from another supplier
+      other: none of the other codes fit
     max_fail_rate: 0.30
     action: warn

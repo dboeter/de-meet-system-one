@@ -14,10 +14,11 @@ PHONE = re.compile(r"(?<![\d+])(?:\+31|0031|0)(?:[\s-]?\d){9}(?!\d)")
 EMAIL = re.compile(r"[\w.+-]+@[\w-]+(?:\.[\w-]+)+")
 
 CATEGORIES = {
-    "person_name": "Does `text` name a private individual (not a company, brand, or an official acting in their role)?",
-    "health": "Does `text` reveal anything about a person's health, illness, disability or medical treatment?",
-    "financial": "Does `text` reveal a person's financial situation, such as debts, arrears, income or benefits?",
-    "address": "Does `text` give a person's home address, or enough detail to find where they live?",
+    # Describe each category, never list cases from data/pii_notes.csv: the notes are the test set.
+    "person_name": "Does `text` name a private individual (not an official acting in their role)?",
+    "health": "Does `text` reveal anything about a person's physical or mental health?",
+    "financial": "Does `text` reveal anything about a person's financial situation?",
+    "address": "Does `text` reveal where a person lives?",
     "special_category": "Does `text` reveal a person's ethnicity, religion, political opinion, union membership, "
     "sexual orientation, or genetic or biometric data?",
 }
