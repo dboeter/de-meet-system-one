@@ -48,8 +48,8 @@ synthetic rows → code step (normalize / block / regex / shortlist / dedupe)
   in the notebook. The address check asks for one specific building with its own house
   number; the previous wording (an address's parts, postcode/city optional) had its lowest
   true row at 0.68 instead of 0.87 and 5 review rows instead of 3. Splitting the cancel check
-  into a pass Noul plus a code Choice: review 8 → 11 rows, lowest true row 0.58 → 0.40;
-  `1 - p(other)` stays.
+  into a pass Noul plus a code Choice: review 10 → 11 rows, lowest true row 0.53 → 0.40;
+  the single Choice stays.
 - **Output:** per-row pass probability and flag, quarantine table, run-manifest fail rate;
   one column crosses its threshold and `fail_run` fires. Show cache hits on a rerun.
 - **Live input:** a value plus a plain-language check.

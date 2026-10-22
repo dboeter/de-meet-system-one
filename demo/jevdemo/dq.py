@@ -121,6 +121,10 @@ def to_judgment(check: Check, value: str, response) -> Judgment:
             if check.question is None
             else response.nouls["passes"].noul
         )
+        # A code is only as sure as its own probability: with two codes near 0.5, 'other' is near 0
+        # but the code is a coin flip, and accepting it would write a guess into gold.
+        if answer.choice != "other":
+            p_pass = min(p_pass, answer.probabilities[answer.choice])
         return Judgment(check.id, value, p_pass, answer.choice)
     return Judgment(check.id, value, response.nouls["passes"].noul)
 

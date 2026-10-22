@@ -26,7 +26,7 @@ OUTCOMES = {
 
 WORDINGS = {
     "address_is_postal": ("Address", "Before: street + number", "Now: one building, its own number"),
-    "cancel_reason_code": ("Cancel reason", "Tried: Noul + Choice", "Now: 1 − p(other)"),
+    "cancel_reason_code": ("Cancel reason", "Tried: Noul + Choice", "Now: one Choice"),
 }  # fmt: skip
 LABELS = {
     "address_is_postal": lambda r: r["is_address"],

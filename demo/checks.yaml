@@ -1,7 +1,8 @@
 # Semantic data-quality checks for the silver layer (station 1).
 #
 # A Noul check is a predicate on the value: it is read as "Does `value` pass this check: it <check>?".
-# A Choice check maps the value to one code; picking `other` counts as failing.
+# A Choice check maps the value to one code; picking `other` counts as failing, and a code is
+# only as sure as its own probability (two codes near 0.5 go to review).
 # action: warn (rejected rows only counted) | quarantine (rejected rows always go to the
 #         quarantine table) | fail_run (as quarantine, and the run fails closed when triggered).
 # max_fail_rate: share of rows Jev rejects above which the check is triggered in the manifest.

@@ -25,7 +25,7 @@ Rule 2 was already met everywhere: every question, including the ones with opaqu
 | Schema: the source system in state (`source_system`) | 1 | 76% top-1, 60% pre-filled | 80% top-1, 60% pre-filled | yes |
 | Schema: both | 1, 4 | 76% top-1, 60% pre-filled, 1 wrong | 80%, 64%, none wrong | yes |
 | DQ address: "one specific building, its own house number" instead of "street + number, optionally postcode/city" | 4 | lowest true row 0.68, 5 rows in review | 0.87, 3 rows | yes |
-| DQ cancel reason: a pass/fail Noul plus a code Choice instead of `1 - p(other)` | 3 | lowest true row 0.58, 8 rows in review | 0.40, 11 rows | no |
+| DQ cancel reason: a pass/fail Noul plus a code Choice instead of one Choice | 3 | lowest true row 0.53, 10 rows in review | 0.40, 11 rows | no |
 
 The rejected wordings stay recorded and runnable: `checks_variants.yaml` for DQ,
 `schema.VARIANTS` for schema mapping. Both notebooks show them side by side with the
@@ -70,6 +70,12 @@ descriptions instead, every row still lands on the right side, but the cancel ch
 true row fell from 0.94 to 0.58 and review grew from 1 row to 8. That is the honest margin.
 The one boundary added afterwards ("their own plans or funding changed or it was ordered by
 mistake") describes the class, not a row; without it three rows took the wrong code.
+
+**A Choice can be sure something fits without being sure what.** With the honest
+descriptions, `concurrent was goedkoper` split 0.56/0.44 between price and switching supplier,
+while `other` stayed near 0, so `1 - p(other)` accepted a coin flip. A code is now only as sure
+as its own probability (the minimum of the two), which sends both close calls to review:
+lowest true row 0.53, 10 rows in review.
 
 ## How to run the next experiment
 

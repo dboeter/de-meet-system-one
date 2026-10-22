@@ -1,3 +1,4 @@
+import pytest
 from typesafe_sdk import SystemOneResponse
 
 from jevdemo import dq
@@ -89,7 +90,38 @@ def test_wider_review_band_recomputes_without_judge():
     assert result.manifest["status"] == "ok"
 
 
-def test_choice_passes_with_one_minus_other():
+CODES = {"LATE": "late", "PRICE": "price", "other": "none fit"}
+
+
+def choice_response(probabilities: dict[str, float], **answers) -> SystemOneResponse:
+    top = max(probabilities, key=probabilities.get)
+    return SystemOneResponse.model_validate(
+        {
+            "model": "jev-1.13.0",
+            "usage": {"input_tokens": 1, "output_tokens": 1},
+            "answers": {
+                **answers,
+                "code": {
+                    "type": "choice",
+                    "choice": top,
+                    "confidence": 0.5,
+                    "probabilities": probabilities,
+                },
+            },
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("probabilities", "code", "p_pass"),
+    [
+        ({"LATE": 0.8, "PRICE": 0.0, "other": 0.2}, "LATE", 0.8),
+        # Two codes fit: 'other' is near 0, but the code is a coin flip, so it may not be accepted.
+        ({"LATE": 0.55, "PRICE": 0.43, "other": 0.02}, "LATE", 0.55),
+        ({"LATE": 0.3, "PRICE": 0.0, "other": 0.7}, "other", 0.3),
+    ],
+)
+def test_choice_passes_with_the_probability_of_its_code(probabilities, code, p_pass):
     check = dq.Check(
         id="reason",
         column="cancel_reason",
@@ -97,25 +129,30 @@ def test_choice_passes_with_one_minus_other():
         check="Which code?",
         max_fail_rate=0.3,
         action="warn",
-        codes={"LATE": "late", "other": "none fit"},
+        codes=CODES,
     )
-    response = SystemOneResponse.model_validate(
-        {
-            "model": "jev-1.13.0",
-            "usage": {"input_tokens": 1, "output_tokens": 1},
-            "answers": {
-                "code": {
-                    "type": "choice",
-                    "choice": "LATE",
-                    "confidence": 0.6,
-                    "probabilities": {"LATE": 0.8, "other": 0.2},
-                }
-            },
-        }
+    judgment = dq.to_judgment(check, "te laat", choice_response(probabilities))
+    assert judgment.code == code
+    assert abs(judgment.p_pass - p_pass) < 1e-9
+
+
+def test_split_choice_is_capped_by_the_probability_of_its_code():
+    check = dq.Check(
+        id="reason",
+        column="cancel_reason",
+        kind="choice",
+        check="gives a reason that fits one of `codes`",
+        question="Which code?",
+        max_fail_rate=0.3,
+        action="warn",
+        codes=CODES,
+    )
+    response = choice_response(
+        {"LATE": 0.55, "PRICE": 0.43, "other": 0.02},
+        passes={"type": "noul", "noul": 0.95},
     )
     judgment = dq.to_judgment(check, "te laat", response)
-    assert judgment.code == "LATE"
-    assert abs(judgment.p_pass - 0.8) < 1e-9
+    assert (judgment.code, judgment.p_pass) == ("LATE", 0.55)
 
 
 def test_split_choice_scores_pass_with_its_own_noul_and_codes_in_state():

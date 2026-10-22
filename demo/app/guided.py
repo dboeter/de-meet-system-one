@@ -553,7 +553,11 @@ def dq_choice():
     check = dq_check("cancel_reason_code")
     values = [
         dq_value(check, v)
-        for v in ("concurrent was goedkoper", "budget bevroren", "kwaliteit viel tegen")
+        for v in (
+            "nieuwe inkoper, eigen leveranciers",
+            "concurrent was goedkoper",
+            "kwaliteit viel tegen",
+        )
     ]
     replies = judge().ask_many([dq.check_request(check, v) for v in values])
     parts = [head("Code, top two", "Probability")]
@@ -860,8 +864,9 @@ STEPS = [
     Step(
         "Data quality",
         "Free text to a code: a Choice",
-        "Nothing in 'concurrent was goedkoper' says expensive. When no code fits, 'other' wins and the "
-        "row goes to review instead of getting a wrong code.",
+        "'nieuwe inkoper, eigen leveranciers' never says 'switched supplier', and Jev is sure. "
+        "'concurrent was goedkoper' fits two codes, price and switching supplier: a coin flip goes to "
+        "review instead of a guess. For 'kwaliteit viel tegen' no code fits, so 'other' wins: review too.",
         dq_choice,
     ),
     Step(
@@ -915,7 +920,8 @@ STEPS = [
         "What regex can't see",
         "Regex can't see that a neighbour with diabetes is health data about a private person. Five "
         "yes/no questions in one request. Trade-union membership is special-category data; a public "
-        "official is not a private person.",
+        "official is not a private person. The union note also scores 0.36 on naming a person without "
+        "naming anyone: a false flag, the price of a low threshold.",
         pii_example,
     ),
     Step(
