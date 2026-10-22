@@ -17,7 +17,7 @@ checks:
   - id: description_names_product
     column: product_description
     kind: noul
-    check: describes the product itself, not a pointer elsewhere such as "zie mail" or "idem"
+    check: describes the product itself, rather than referring to information kept elsewhere
     max_fail_rate: 0.10
     action: fail_run
 
