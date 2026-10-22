@@ -1,5 +1,7 @@
 """The question-wording experiments as data and charts, shared by notebook 05 and the app's lessons page."""
 
+from functools import partial
+
 import altair as alt
 import pandas as pd
 
@@ -10,11 +12,21 @@ from jevdemo.pipeline import HI, LO
 INK, GREY, BLUE, RED = "#141414", "#8a8a8a", "#1d5fbf", "#c4242a"
 LANE = "#f2f4f7"
 
+# Each run: how to ask for one source column, and how to read the answer.
 SCHEMA_RUNS = {
-    "First version": "type_no_context",
-    "No type suffix": "no_type_no_context",
-    "Source system in state": "type_context",
-    "Both (now the default)": "default",
+    **{
+        name: (
+            partial(schema.mapping_request, **schema.VARIANTS[variant]),
+            schema.to_mapping,
+        )
+        for name, variant in {
+            "First version": "type_no_context",
+            "No type suffix": "no_type_no_context",
+            "Source system in state": "type_context",
+            "Both (now the default)": "default",
+        }.items()
+    },
+    "Yes/no per target": (schema.bool_mapping_request, schema.to_mapping_bool),
 }
 # Ordered from best to worst outcome, so the legend reads as a scale.
 OUTCOMES = {
@@ -42,14 +54,9 @@ def schema_outcomes(judge) -> pd.DataFrame:
         schema.load_gold(),
     )
     frames = []
-    for run, variant in SCHEMA_RUNS.items():
-        kw = schema.VARIANTS[variant]
-        answers = judge.ask_many(
-            [schema.mapping_request(s, targets, **kw) for s in sources]
-        )
-        decided = schema.decide(
-            [schema.to_mapping(s, a.response) for s, a in zip(sources, answers)]
-        )
+    for run, (ask, read) in SCHEMA_RUNS.items():
+        answers = judge.ask_many([ask(s, targets) for s in sources])
+        decided = schema.decide([read(s, a.response) for s, a in zip(sources, answers)])
         for order, m in enumerate(decided):
             right = m["target_col"] == gold[m["source_col"]]
             prefilled = m["decision"] == "accept"
@@ -215,3 +222,71 @@ def margin_strips(margins: pd.DataFrame):
             alt.layer(band, count, dots).properties(title=check, width=520, height=130)
         )
     return _ledger(alt.vconcat(*charts, spacing=24), symbol="circle")
+
+
+def yes_scores(judge) -> pd.DataFrame:
+    """The yes/no run's p(yes) for every shortlisted target of the columns that have one in gold."""
+    sources, targets, gold = (
+        schema.load_sources(),
+        schema.load_targets(),
+        schema.load_gold(),
+    )
+    answers = judge.ask_many([schema.bool_mapping_request(s, targets) for s in sources])
+    return pd.DataFrame(
+        {
+            "source_col": s["source_col"],
+            "target": target,
+            "p_yes": round(answer.noul, 2),
+            "lane": "Gold target"
+            if target == gold[s["source_col"]]
+            else "Other targets",
+        }
+        for s, a in zip(sources, answers)
+        if gold[s["source_col"]] != schema.NONE
+        for target, answer in a.response.nouls.items()
+    )
+
+
+def yes_strips(scores: pd.DataFrame):
+    """Right target, low confidence: most gold targets land just under the pre-fill cutoff."""
+    above = scores[scores["p_yes"] >= schema.CONFIDENT].groupby("lane").size()
+    totals = scores.groupby("lane").size()
+    names = {
+        lane: f"{lane}: {above.get(lane, 0)} of {totals[lane]} reach it"
+        for lane in ("Gold target", "Other targets")
+    }
+    scores = scores.assign(lane=scores["lane"].map(names))
+    lanes = list(names.values())
+    y = alt.Y(
+        "lane:N",
+        sort=lanes,
+        title=None,
+        axis=alt.Axis(minExtent=230, labelPadding=14),
+        scale=alt.Scale(paddingInner=0.4, paddingOuter=0.2),
+    )
+    rule = alt.Chart(pd.DataFrame({"x": [schema.CONFIDENT]})).encode(x="x:Q")
+    cutoff = rule.mark_rule(color=INK, strokeDash=[4, 3]) + rule.mark_text(
+        text=f"pre-fill cutoff {schema.CONFIDENT:.2f}",
+        align="right",
+        dx=-6,
+        y=-8,
+        fontSize=12,
+        color=INK,
+    )
+    dots = (
+        alt.Chart(scores)
+        .transform_calculate(jitter="random()")
+        .mark_circle(size=60, opacity=0.85)
+        .encode(
+            x=alt.X("p_yes:Q", scale=alt.Scale(domain=[0, 1]), title="p(yes)"),
+            y=y,
+            yOffset=alt.YOffset("jitter:Q"),
+            color=alt.Color(
+                "lane:N", scale=alt.Scale(domain=lanes, range=[BLUE, GREY]), legend=None
+            ),
+            tooltip=["source_col", "target", "p_yes"],
+        )
+    )
+    return _ledger(
+        alt.layer(cutoff, dots).properties(width=520, height=130), symbol="circle"
+    )
