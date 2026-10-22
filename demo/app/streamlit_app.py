@@ -1,4 +1,4 @@
-"""Streamlit twin of the four notebooks. Run from demo/: `uv run streamlit run app/streamlit_app.py`."""
+"""Streamlit twin of the notebooks. Run from demo/: `uv run streamlit run app/streamlit_app.py`."""
 
 from pathlib import Path
 

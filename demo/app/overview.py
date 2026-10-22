@@ -1,6 +1,7 @@
 """The opening page: every station's question and its result, one row each, in pipeline order."""
 
 import html
+from pathlib import Path
 
 import results
 import streamlit as st
@@ -64,10 +65,25 @@ STATIONS = [
     ),
 ]
 
-for page, name, question, claim in STATIONS:
-    st.divider()
-    left, right = st.columns([1, 2], gap="large")
-    with left:
-        st.page_link(page, label=name)
-        st.caption(question)
-    right.html(f'<p class="station-claim">{html.escape(claim.headline)}</p>')
+
+def card(page, name, question, claim):
+    # The "station-" key prefix is what ui.CSS styles as a clickable card.
+    with st.container(border=True, key=f"station-{Path(page).stem}"):
+        left, right = st.columns([2, 3], gap="large", vertical_alignment="center")
+        with left:
+            st.page_link(page, label=name, icon=":material/arrow_forward:")
+            st.caption(question)
+        right.html(f'<p class="station-claim">{html.escape(claim.headline)}</p>')
+
+
+st.subheader("Stations")
+for station in STATIONS:
+    card(*station)
+
+st.subheader("Notes")
+card(
+    "lessons.py",
+    "Lessons learned",
+    "What did rewording the questions change?",
+    results.LESSONS_CLAIM,
+)

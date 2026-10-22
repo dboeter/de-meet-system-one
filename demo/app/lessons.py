@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+import results
 import streamlit as st
 
 import ui
@@ -12,14 +13,7 @@ DOC = Path(__file__).resolve().parent.parent / "docs" / "lessons-learned.md"
 finding = ui.header("Lessons learned: question wording", "05_lessons.ipynb")
 judge = ui.judge(ui.mode())
 
-ui.claim(
-    finding,
-    ui.Claim(
-        "Clearer wording helped; splitting the cancel-reason question in two didn't.",
-        "Schema mapping pre-fills one more column right and none wrong, and the address check "
-        "leaves fewer rows for review. The split did worse, so it was not adopted.",
-    ),
-)
+ui.claim(finding, results.LESSONS_CLAIM)
 
 st.subheader("Schema mapping: where each column landed")
 st.caption(

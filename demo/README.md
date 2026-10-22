@@ -71,7 +71,7 @@ running `record.py` again.
 uv run pytest
 ```
 
-The tests run with no key. They check that every request has a recording, that all four notebooks run
+The tests run with no key. They check that every request has a recording, that all five notebooks run
 top to bottom, and that every app page renders, including its live preset.
 
 ## More

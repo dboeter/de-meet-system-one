@@ -223,3 +223,11 @@ def pii_claim(routed: pd.DataFrame) -> Claim:
         f"{routes.get('restricted', 0)} more are restricted; regex masks the numbers in "
         f"{routes.get('masked', 0)}.",
     )
+
+
+# Written, not computed: notebooks/05_lessons.ipynb recomputes the runs behind it.
+LESSONS_CLAIM = Claim(
+    "Clearer wording helped; splitting the cancel-reason question in two didn't.",
+    "Schema mapping pre-fills one more column right and none wrong, and the address check "
+    "leaves fewer rows for review. The split did worse, so it was not adopted.",
+)

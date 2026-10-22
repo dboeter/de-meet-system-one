@@ -37,7 +37,7 @@ def test_overview_links_every_station():
     at.run()
     assert not at.exception
     assert at.title[0].value == "Code for the clear cases, Jev for the rest"
-    assert len(at.get("page_link")) == len(PAGES)
+    assert len(at.get("page_link")) == len(PAGES) + 1  # plus Lessons learned
 
 
 def test_lessons_page_renders_the_doc():

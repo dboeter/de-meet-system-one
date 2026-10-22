@@ -88,8 +88,19 @@ body { font-variant-numeric: tabular-nums; }
 .claim { margin: 0; max-width: 24em; font-size: 40px; line-height: 1.15; font-weight: 500;
   letter-spacing: -0.02em; color: #0a0a0a; text-wrap: balance; }
 .support { margin: 14px 0 8px; max-width: 60ch; font-size: 18px; line-height: 1.5; color: #3d3d3d; }
-.station-claim { margin: 0; max-width: 32em; font-size: 22px; line-height: 1.3; font-weight: 500;
-  letter-spacing: -0.01em; color: #0a0a0a; text-wrap: pretty; }
+.station-claim { margin: 0; max-width: 32em; font-size: 17px; line-height: 1.45; color: #3d3d3d;
+  text-wrap: pretty; }
+/* Overview cards: the station name leads, and the link's ::after covers the card so all of it clicks. */
+[class*="st-key-station-"] { position: relative; padding: 20px 24px; transition: border-color .15s, background .15s; }
+[class*="st-key-station-"]:hover { border-color: #141414; background: #f7f8fa; }
+[class*="st-key-station-"] [data-testid="stElementContainer"] { position: static; }
+[class*="st-key-station-"] [data-testid="stPageLink"] a { padding: 0; }
+[class*="st-key-station-"] [data-testid="stPageLink"] a::after { content: ""; position: absolute; inset: 0; }
+[class*="st-key-station-"] [data-testid="stPageLink"] a:hover { background: none; }
+[class*="st-key-station-"] [data-testid="stPageLink"] p { font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+[class*="st-key-station-"] [data-testid="stPageLink"] a > span:first-child { order: 2; margin-left: 8px; }
+[class*="st-key-station-"] [data-testid="stIconMaterial"] { font-size: 22px; transition: transform .15s; }
+[class*="st-key-station-"]:hover [data-testid="stIconMaterial"] { transform: translateX(3px); }
 @media (max-width: 640px) { .claim { font-size: 30px; } }
 </style>
 """
@@ -175,7 +186,10 @@ def strip(
     )
     chart = (
         (dots + lines)
-        .properties(height=height)
+        # Room on the right: dots at 1.0 and the "1.0" tick label overhang the plot area.
+        .properties(
+            height=height, padding={"left": 5, "top": 5, "bottom": 5, "right": 20}
+        )
         .configure_axis(
             grid=False,
             labelColor="#3d3d3d",
