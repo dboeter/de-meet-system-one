@@ -33,4 +33,5 @@ def test_lessons_page_renders_the_doc():
     at.run()
     at.switch_page("lessons.py").run()
     assert not at.exception
-    assert "# Lessons learned" in at.markdown[0].value
+    assert at.title[0].value == "Lessons learned: question wording"
+    assert any("What we learned" in m.value for m in at.markdown)
