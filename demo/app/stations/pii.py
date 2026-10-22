@@ -22,20 +22,17 @@ routed = results.pii_routed(probs)
 routes = routed["route"].value_counts()
 ui.claim(finding, results.pii_claim(routed))
 
-if ui.presenting():
-    chart = st.container()
-else:
-    left, chart = st.columns([1, 2], gap="large")
-    with left:
-        c1, c2 = st.columns(2)
-        for col, name in zip(
-            [c1, c2, c1, c2], ["excluded", "restricted", "masked", "clear"], strict=True
-        ):
-            col.metric(name.capitalize(), int(routes.get(name, 0)))
-        st.caption(
-            f"{len(notes)} notes: regex with checksums settled {len(notes) - len(rest)}, Jev screened {len(rest)}. "
-            f"A category counts at p ≥ {pii.THRESHOLD:.2f}, low on purpose: a missed flag costs more than a review."
-        )
+left, chart = st.columns([1, 2], gap="large")
+with left:
+    c1, c2 = st.columns(2)
+    for col, name in zip(
+        [c1, c2, c1, c2], ["excluded", "restricted", "masked", "clear"], strict=True
+    ):
+        col.metric(name.capitalize(), int(routes.get(name, 0)))
+    st.caption(
+        f"{len(notes)} notes: regex with checksums settled {len(notes) - len(rest)}, Jev screened {len(rest)}. "
+        f"A category counts at p ≥ {pii.THRESHOLD:.2f}, low on purpose: a missed flag costs more than a review."
+    )
 with chart:
     long = pd.DataFrame(
         [
@@ -67,7 +64,7 @@ with chart:
 
 
 def closing():
-    """Your turn, then the gate; the gate's caveats are detail."""
+    """Your turn, then the gate."""
     st.subheader("Your turn")
     with st.form("live"):
         text = st.text_area("A Dutch note", pii.LIVE_PRESET, height=80)
@@ -92,20 +89,14 @@ def closing():
                 st.warning(str(e))
 
     st.subheader("The gate before client data")
-    gate = (
+    st.markdown(
         "This runs on synthetic notes only. Sending client text to an external API to find PII needs the "
         "data-residency question settled first: retention, hosting region and the processing agreement."
+        "\n\n- A regex hit skips Jev, so a note with a phone number and health details is only masked.\n"
+        "- Jev says whether a note contains PII, not where. Masking the span is a later step.\n\n"
+        "More depth: the jevex demo (`../jevex`) compares regex and Jev on customer-service email."
     )
-    if not ui.presenting():
-        gate += (
-            "\n\n- A regex hit skips Jev, so a note with a phone number and health details is only masked.\n"
-            "- Jev says whether a note contains PII, not where. Masking the span is a later step.\n\n"
-            "More depth: the jevex demo (`../jevex`) compares regex and Jev on customer-service email."
-        )
-    st.markdown(gate)
 
-
-ui.end_of_presenter_view(closing)
 
 route_tab, cats, extra, regex = st.tabs(
     ["Routing", "Per category", "Flagged beyond our labels", "Regex hits"]

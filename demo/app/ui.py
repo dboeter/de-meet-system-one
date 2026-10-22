@@ -1,6 +1,5 @@
 """Shared pieces of the Streamlit app: the judge per mode, the threshold strip, request and answer views."""
 
-import html
 import json
 import os
 from dataclasses import dataclass
@@ -33,22 +32,6 @@ def mode() -> str:
     return "live" if st.session_state.get("live") else "recorded"
 
 
-def presenting() -> bool:
-    """Presenter view: the claim, one chart and the live input. Off shows every table and control."""
-    return st.session_state.get("presenting", False)
-
-
-def end_of_presenter_view(closing=None):
-    """Everything a page draws after this call is detail, shown only with presenter view off.
-
-    In presenter view `closing` (the live input) is drawn here; otherwise the page calls it at its end.
-    """
-    if presenting():
-        if closing:
-            closing()
-        st.stop()
-
-
 @st.cache_resource
 def judge(mode: str) -> Judge:
     return Judge(mode=mode)
@@ -56,12 +39,6 @@ def judge(mode: str) -> Judge:
 
 def sidebar():
     with st.sidebar:
-        st.toggle(
-            "Presenter view",
-            value=False,
-            key="presenting",
-            help="On: the result, one chart and the live input. Off: every table, threshold and request.",
-        )
         key = has_key()
         st.toggle(
             "Live API calls",
@@ -104,36 +81,19 @@ body { font-variant-numeric: tabular-nums; }
 @media (max-width: 640px) { .claim { font-size: 30px; } }
 </style>
 """
-# Presenter view: the page title steps back to a station name so the claim under it leads.
-STATION_NAME = """
-<style>
-h1 { font-size: 18px !important; font-weight: 600 !important; color: #3d3d3d !important;
-  padding-bottom: 6px !important; }
-</style>
-"""
 
 
 def header(title: str, notebook: str):
     """Title, source line, and a slot under them for the station's claim (filled once computed)."""
     st.html(CSS)
-    if presenting():
-        st.html(STATION_NAME)
-        st.title(title)
-    else:
-        st.title(title)
-        st.caption(f"Notebook twin: notebooks/{notebook} · answers: {mode()}")
+    st.title(title)
+    st.caption(f"Notebook twin: notebooks/{notebook} · answers: {mode()}")
     return st.empty()
 
 
 def claim(slot, c):
-    """The station's result: set large in presenter view, as one bold line over its support otherwise."""
-    if presenting():
-        slot.html(
-            f'<p class="claim">{html.escape(c.headline)}</p>'
-            f'<p class="support">{html.escape(c.support)}</p>'
-        )
-    else:
-        slot.markdown(f"**{c.headline}** {c.support}")
+    """The station's result: one bold line over its support."""
+    slot.markdown(f"**{c.headline}** {c.support}")
 
 
 def strip(
@@ -174,11 +134,8 @@ def strip(
             ),
             legend=alt.Legend(orient="top", title=None),
         )
-    big = presenting()
-    font = 15 if big else 12
-    dots = base.mark_circle(
-        size=110 if big else 70, opacity=0.8, color=DATA_HUE
-    ).encode(**encode)
+    font = 12
+    dots = base.mark_circle(size=70, opacity=0.8, color=DATA_HUE).encode(**encode)
     lines = (
         alt.Chart(pd.DataFrame({"t": rules}))
         .mark_rule(color="#141414", strokeDash=[4, 3])

@@ -16,9 +16,8 @@ The same stations come in two forms, so you can compare them:
 - **Notebooks** (`notebooks/01_dq.ipynb` … `04_pii.ipynb`): the step-by-step story with the code visible. `05_lessons.ipynb` recomputes the question-wording experiments.
 - **Streamlit app** (`app/`): a Guided walkthrough to present from, then an overview and one page per station
   for questions. The walkthrough has 13 steps, each example first. Move with Back/Next, the arrow keys or a
-  clicker's PageUp/PageDown, and open a step directly with `?step=N`. On the station pages, presenter view
-  (off by default, in the sidebar) shows each station's result, one chart and a form for live input; with it
-  off you also get the threshold sliders, tables and the requests Jev receives.
+  clicker's PageUp/PageDown, and open a step directly with `?step=N`. Each station page shows the result,
+  threshold sliders, tables, the requests Jev receives and a form for live input.
 
 Both use the `jevdemo` package and `recordings.jsonl`, so they show the same numbers.
 

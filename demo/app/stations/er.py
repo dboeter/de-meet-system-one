@@ -14,19 +14,16 @@ pairs, exact, ambiguous = results.PAIRS, results.EXACT, results.AMBIGUOUS
 names = {r["id"]: r["name"] for r in a + b}
 p_same = results.er_p_same(ui.mode())
 
-if ui.presenting():
-    lo, hi, chart = er.LO, er.HI, st.container()
-else:
-    left, chart = st.columns([1, 2], gap="large")
-    with left:
-        lo, hi = st.slider(
-            "Thresholds on p_same (keep separate ≤ lo, merge ≥ hi)",
-            0.0,
-            1.0,
-            (er.LO, er.HI),
-            0.01,
-            help="Chosen on this same small set, no holdout. Moving them makes no API calls.",
-        )
+left, chart = st.columns([1, 2], gap="large")
+with left:
+    lo, hi = st.slider(
+        "Thresholds on p_same (keep separate ≤ lo, merge ≥ hi)",
+        0.0,
+        1.0,
+        (er.LO, er.HI),
+        0.01,
+        help="Chosen on this same small set, no holdout. Moving them makes no API calls.",
+    )
 
 matches = results.er_matches(p_same, lo, hi)
 table = pd.DataFrame(matches)
@@ -40,22 +37,21 @@ scores = {"Levenshtein": er.evaluate(fuzzy, gold), "Jev": er.evaluate(jev, gold)
 j = scores["Jev"]
 ui.claim(finding, results.er_claim(scores))
 
-if not ui.presenting():
-    with left:
-        c1, c2 = st.columns(2)
-        c1.metric(
-            "Candidate pairs",
-            len(pairs),
-            help=f"of {len(a)} × {len(b)} = {len(a) * len(b)} possible",
-        )
-        c2.metric("Settled by exact rule", len(exact), help="Same KvK or IBAN")
-        c1.metric("Judged by Jev", len(ambiguous))
-        c2.metric("Review queue", j["review"])
-        seen = {(ra["id"], rb["id"]) for ra, rb in pairs}
-        st.caption(
-            f"Blocking recall: {len(seen & gold)} of {len(gold)} gold pairs reach a candidate. "
-            "Jev can't match a pair it never sees."
-        )
+with left:
+    c1, c2 = st.columns(2)
+    c1.metric(
+        "Candidate pairs",
+        len(pairs),
+        help=f"of {len(a)} × {len(b)} = {len(a) * len(b)} possible",
+    )
+    c2.metric("Settled by exact rule", len(exact), help="Same KvK or IBAN")
+    c1.metric("Judged by Jev", len(ambiguous))
+    c2.metric("Review queue", j["review"])
+    seen = {(ra["id"], rb["id"]) for ra, rb in pairs}
+    st.caption(
+        f"Blocking recall: {len(seen & gold)} of {len(gold)} gold pairs reach a candidate. "
+        "Jev can't match a pair it never sees."
+    )
 with chart:
     jev_rows = table[table["by"] == "Jev"].assign(
         lane="Supplier pairs", pair=lambda t: t["name_a"] + " | " + t["name_b"]
@@ -79,7 +75,6 @@ with chart:
 def your_turn():
     st.subheader("Your turn")
     fields = ["name", "street", "postcode", "city", "kvk", "iban"]
-    shown = ["name", "city"] if ui.presenting() else fields  # the rest keeps its preset
     with st.form("live"):
         cols = st.columns(2)
         records = []
@@ -91,8 +86,6 @@ def your_turn():
                         "id": preset["id"],
                         **{
                             k: st.text_input(k, preset[k], key=f"{preset['id']}-{k}")
-                            if k in shown
-                            else preset[k]
                             for k in fields
                         },
                     }
@@ -107,8 +100,6 @@ def your_turn():
         except (NotRecorded, LiveUnavailable) as e:
             st.warning(str(e))
 
-
-ui.end_of_presenter_view(your_turn)
 
 st.subheader("Jev against the fuzzy-match baseline")
 st.caption(

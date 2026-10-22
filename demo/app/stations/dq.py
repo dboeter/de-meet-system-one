@@ -11,47 +11,43 @@ finding = ui.header("Semantic data-quality checks", "01_dq.ipynb")
 rows, checks = results.ROWS, results.CHECKS
 judgments, first, rerun = results.dq_judgments(ui.mode())
 
-if ui.presenting():
-    lo, hi, chart = pipeline.LO, pipeline.HI, st.container()
-else:
-    left, chart = st.columns([1, 2], gap="large")
-    with left:
-        lo, hi = st.slider(
-            "Thresholds on p_pass (reject ≤ lo, accept ≥ hi)",
-            0.0,
-            1.0,
-            (pipeline.LO, pipeline.HI),
-            0.01,
-            help="Recomputed locally: moving these makes no API calls.",
-        )
+left, chart = st.columns([1, 2], gap="large")
+with left:
+    lo, hi = st.slider(
+        "Thresholds on p_pass (reject ≤ lo, accept ≥ hi)",
+        0.0,
+        1.0,
+        (pipeline.LO, pipeline.HI),
+        0.01,
+        help="Recomputed locally: moving these makes no API calls.",
+    )
 result = dq.run(rows, checks, judgments, lo=lo, hi=hi)
 manifest = result.manifest
 decided = pd.DataFrame(result.rows)
 ui.claim(finding, results.dq_claim(result, first, rerun))
 
-if not ui.presenting():
-    with left:
-        a, b = st.columns(2)
-        a.metric("Run status", manifest["status"].upper())
-        b.metric(
-            "Quarantined",
-            len({r["row_id"] for r in result.quarantine}),
-            help="Rows held out of gold",
-        )
-        a.metric(
-            "Jev calls",
-            first.asked,
-            help=f"{len(rows)} rows × {len(checks)} checks = {len(rows) * len(checks)} cells, asked once per distinct value",
-        )
-        b.metric(
-            "Review queue",
-            int((decided["decision"] == "review").sum()),
-            help="(row, check) cells",
-        )
-        st.caption(
-            f"Rerun with the same values: asked {rerun.asked}, from cache {rerun.cached} "
-            f"(hit rate {ui.percent(rerun.hit_rate)})."
-        )
+with left:
+    a, b = st.columns(2)
+    a.metric("Run status", manifest["status"].upper())
+    b.metric(
+        "Quarantined",
+        len({r["row_id"] for r in result.quarantine}),
+        help="Rows held out of gold",
+    )
+    a.metric(
+        "Jev calls",
+        first.asked,
+        help=f"{len(rows)} rows × {len(checks)} checks = {len(rows) * len(checks)} cells, asked once per distinct value",
+    )
+    b.metric(
+        "Review queue",
+        int((decided["decision"] == "review").sum()),
+        help="(row, check) cells",
+    )
+    st.caption(
+        f"Rerun with the same values: asked {rerun.asked}, from cache {rerun.cached} "
+        f"(hit rate {ui.percent(rerun.hit_rate)})."
+    )
 with chart:
     distinct = decided.drop_duplicates(["check_id", "value"]).assign(
         check=lambda t: t["check_id"].map(results.check_label)
@@ -86,8 +82,6 @@ def your_turn():
         except (NotRecorded, LiveUnavailable) as e:
             st.warning(str(e))
 
-
-ui.end_of_presenter_view(your_turn)
 
 st.subheader("Run manifest")
 st.dataframe(

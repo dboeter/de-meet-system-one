@@ -1,4 +1,4 @@
-"""The Streamlit app renders every page from recordings, with no key, in presenter view and with every detail.
+"""The Streamlit app renders every page from recordings, with no key.
 
 The guided walkthrough renders all 13 steps, and its step comes from the URL.
 """
@@ -17,17 +17,15 @@ PAGES = [
 ]
 
 
-@pytest.mark.parametrize("presenting", [True, False])
 @pytest.mark.parametrize("page", PAGES)
-def test_page_renders_from_recordings(page, presenting, monkeypatch):
+def test_page_renders_from_recordings(page, monkeypatch):
     monkeypatch.delenv("JEV_MODE", raising=False)
     at = AppTest.from_file(str(APP), default_timeout=60)
     at.run()
-    at.toggle(key="presenting").set_value(presenting).run()
     at.switch_page(page).run()
     assert not at.exception
     assert at.title[0].value
-    assert bool(at.tabs) != presenting  # the tables are detail
+    assert at.tabs
     # The live input closes the page; PII adds its data-residency note after it.
     assert "Your turn" in [h.value for h in at.subheader][-2:]
     at.button[0].click().run()  # the preset in "Your turn" is recorded
@@ -46,7 +44,6 @@ def test_overview_links_every_station():
 def test_lessons_page_renders_the_doc():
     at = AppTest.from_file(str(APP), default_timeout=60)
     at.run()
-    at.toggle(key="presenting").set_value(False).run()
     at.switch_page("lessons.py").run()
     assert not at.exception
     assert at.title[0].value == "Lessons learned: question wording"

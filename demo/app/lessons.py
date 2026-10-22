@@ -29,7 +29,5 @@ st.caption(
 )
 st.altair_chart(lessons.margin_strips(lessons.dq_margins(judge)), width="content")
 
-ui.end_of_presenter_view()
-
 # The doc's own title would repeat the page title.
 st.markdown(DOC.read_text().split("\n", 1)[1])

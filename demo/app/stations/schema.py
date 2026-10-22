@@ -15,29 +15,26 @@ scores = schema.evaluate(decided, gold)
 table = results.schema_table(decided)
 ui.claim(finding, results.schema_claim(table, scores))
 
-if ui.presenting():
-    chart = st.container()
-else:
-    left, chart = st.columns([1, 2], gap="large")
-    with left:
-        c1, c2 = st.columns(2)
-        c1.metric(
-            "Pre-filled",
-            int((table["decision"] == "accept").sum()),
-            help=f"of {len(table)} source columns",
-        )
-        c2.metric("To the consultant", int((table["decision"] == "review").sum()))
-        c1.metric("Top-1 accuracy", ui.percent(scores["top1_accuracy"]))
-        c2.metric(
-            "None right",
-            ui.percent(scores["none_accuracy"]),
-            help="Columns with no target equivalent",
-        )
-        st.caption(
-            f"Pre-filled when p ≥ {schema.CONFIDENT:.2f} and no other column claims the same 1:1 target. "
-            f"Shortlists hold {min(map(len, shortlists.values()))}–{max(map(len, shortlists.values()))} options; "
-            f"shortlist recall {ui.percent(scores['shortlist_recall'])} by construction."
-        )
+left, chart = st.columns([1, 2], gap="large")
+with left:
+    c1, c2 = st.columns(2)
+    c1.metric(
+        "Pre-filled",
+        int((table["decision"] == "accept").sum()),
+        help=f"of {len(table)} source columns",
+    )
+    c2.metric("To the consultant", int((table["decision"] == "review").sum()))
+    c1.metric("Top-1 accuracy", ui.percent(scores["top1_accuracy"]))
+    c2.metric(
+        "None right",
+        ui.percent(scores["none_accuracy"]),
+        help="Columns with no target equivalent",
+    )
+    st.caption(
+        f"Pre-filled when p ≥ {schema.CONFIDENT:.2f} and no other column claims the same 1:1 target. "
+        f"Shortlists hold {min(map(len, shortlists.values()))}–{max(map(len, shortlists.values()))} options; "
+        f"shortlist recall {ui.percent(scores['shortlist_recall'])} by construction."
+    )
 with chart:
     ui.strip(
         table.assign(
@@ -90,8 +87,6 @@ def your_turn():
                 f"Unknown source table: {e}" if isinstance(e, KeyError) else str(e)
             )
 
-
-ui.end_of_presenter_view(your_turn)
 
 mapping, wrong, yml, tried, data = st.tabs(
     [
