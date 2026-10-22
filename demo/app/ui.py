@@ -105,13 +105,18 @@ def strip(
     rules: list[float],
     tooltip: list[str],
     colour: str | None = "decision",
-    height: int = 220,
-    x_title: str | None = None,
+    height: int = 260,
+    x_title: str = "Probability of yes",
+    title: str = "",
+    subtitle: str = "",
 ):
-    """Every judged value as a dot on 0..1, one lane per `y`, with the thresholds as rules."""
+    """Every judged value as a dot on 0..1, one lane per `y`, with the thresholds as rules.
+
+    `title` is the question the dots answer; it sits above the chart, where it is read first.
+    """
     base = alt.Chart(df).transform_calculate(jitter="random()")
     encode = {
-        "x": alt.X(f"{x}:Q", scale=alt.Scale(domain=[0, 1]), title=x_title or x),
+        "x": alt.X(f"{x}:Q", scale=alt.Scale(domain=[0, 1]), title=x_title),
         "y": alt.Y(f"{y}:N", title=None),
         "yOffset": alt.YOffset("jitter:Q"),
         "tooltip": tooltip,
@@ -140,7 +145,22 @@ def strip(
         (dots + lines)
         # Room on the right: dots at 1.0 and the "1.0" tick label overhang the plot area.
         .properties(
-            height=height, padding={"left": 5, "top": 5, "bottom": 5, "right": 20}
+            height=height,
+            padding={"left": 5, "top": 5, "bottom": 5, "right": 20},
+            title=alt.TitleParams(
+                title,
+                # One line per sentence: Vega cuts a subtitle at the chart's width instead of wrapping it.
+                subtitle=[f"{line.rstrip('.')}." for line in subtitle.split(". ")]
+                if subtitle
+                else "",
+                anchor="start",
+                fontSize=17,
+                fontWeight=600,
+                color="#0a0a0a",
+                subtitleFontSize=13,
+                subtitleColor="#3d3d3d",
+                offset=14,
+            ),
         )
         .configure_axis(
             grid=False,

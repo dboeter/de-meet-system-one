@@ -58,11 +58,11 @@ with chart:
         "check",
         [lo, hi],
         ["value", "p_pass", "code", "decision"],
-        x_title="Jev's confidence that the value passes",
-    )
-    st.caption(
-        f"One dot per distinct value. Left of {lo:.2f} reject, right of {hi:.2f} accept; "
-        "in between, review."
+        title="Does the value pass its check?",
+        subtitle=(
+            f"One dot per distinct value. Left of {lo:.2f} reject, right of {hi:.2f} accept; "
+            "in between, review."
+        ),
     )
 
 

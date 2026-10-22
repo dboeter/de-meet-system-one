@@ -47,11 +47,12 @@ with chart:
         [schema.CONFIDENT],
         ["source_col", "target_col", "gold", "p", "reason"],
         height=180,
-        x_title="Jev's confidence in the column it picked",
-    )
-    st.caption(
-        f"One dot per source column. Right of {schema.CONFIDENT:.2f} accept, "
-        "unless another column claims the same target; the rest goes to review."
+        x_title="Probability",
+        title="How sure was Jev of the column it picked?",
+        subtitle=(
+            f"One dot per source column. Right of {schema.CONFIDENT:.2f} accept, "
+            "unless another column claims the same target; the rest goes to review."
+        ),
     )
 
 

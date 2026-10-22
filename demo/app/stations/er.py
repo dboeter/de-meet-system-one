@@ -63,11 +63,11 @@ with chart:
         [lo, hi],
         ["pair", "p_same", "decision", "gold"],
         height=160,
-        x_title="Jev's confidence that both records are the same supplier",
-    )
-    st.caption(
-        f"One dot per pair that no exact KvK or IBAN rule settled. Left of {lo:.2f} the records "
-        f"are rejected, right of {hi:.2f} accepted; in between, review."
+        title="Are both records the same supplier?",
+        subtitle=(
+            f"One dot per pair that no exact KvK or IBAN rule settled. Left of {lo:.2f} the records "
+            f"are rejected, right of {hi:.2f} accepted; in between, review."
+        ),
     )
 
 

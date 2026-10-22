@@ -59,7 +59,6 @@ CSS = """
 .g-quote + .g-verdict { padding-left: 19px; }
 .g-codes { display: grid; grid-template-columns: auto 1fr; gap: 2px 14px; margin-top: 8px;
   padding-left: 19px; font-size: 14px; color: #3d3d3d; }
-.g-codes.two { grid-template-columns: auto 1fr auto 1fr; }
 .g-codes code { font-size: 13px; }
 .g-label { margin: 0 0 6px; font-size: 12px; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; color: #3d3d3d; }
@@ -69,6 +68,10 @@ CSS = """
   align-items: center; gap: 12px 14px; max-width: 560px; }
 .g-answers .g-group { grid-column: 1 / -1; margin-top: 6px; font-size: 14px; color: #3d3d3d; }
 .g-answers .g-group b { color: #0a0a0a; }
+.g-head { padding-bottom: 4px; border-bottom: 1px solid #e6e6e6; font-size: 12px; color: #5f5f5f; }
+.g-head-p { grid-column: span 2; }
+.g-quote.small { margin: 10px 0 2px; font-size: 16px; }
+.g-gap { height: 20px; }
 .g-p { text-align: right; color: #3d3d3d; }
 .g-bar { position: relative; height: 10px; border-radius: 5px; background: #e6e6e6; }
 .g-bar i { position: absolute; top: 0; bottom: 0; left: 0; border-radius: 5px; }
@@ -171,6 +174,15 @@ def answers(*parts: str) -> str:
     return f'<div class="g-answers">{"".join(parts)}</div>'
 
 
+def head(item: str, p: str = "Probability of yes", outcome: str = "Decision") -> str:
+    """Column names over an answer list: what each row is, what the number means, where it lands."""
+    return (
+        f'<span class="g-head">{html.escape(item)}</span>'
+        f'<span class="g-head g-head-p">{html.escape(p)}</span>'
+        f'<span class="g-head">{html.escape(outcome)}</span>'
+    )
+
+
 def group(heading: str) -> str:
     return f'<div class="g-group">{heading}</div>'
 
@@ -188,10 +200,11 @@ def label(text: str) -> str:
     return f'<p class="g-label">{html.escape(text)}</p>'
 
 
-def quote(text: str, data: bool = False) -> str:
+def quote(text: str, data: bool = False, small: bool = False) -> str:
     """The question word for word; `field` names are set as code."""
     body = re.sub(r"`([^`]+)`", r"<code>\1</code>", html.escape(text))
-    return f'<blockquote class="g-quote{" data" if data else ""}">{body}</blockquote>'
+    kind = " data" if data else " small" if small else ""
+    return f'<blockquote class="g-quote{kind}">{body}</blockquote>'
 
 
 def lead(headline: str, support: str = ""):
@@ -220,9 +233,13 @@ def judge():
 
 
 def example(top: str, state, questions):
-    """Row A across the page, then Row B: the request on the right. The left column is returned for the answers."""
-    st.html(top)
-    left, right = st.columns([3, 2], gap="medium")
+    """The question on the left with the answers under it, the request on the right.
+
+    The left column is returned with `top` in it, so the answers land right under their question.
+    """
+    left, right = st.columns([3, 2], gap="large")
+    if top:
+        left.html(top)
     with right:
         st.html(label("The request"))
         body = request_body(state, questions)
@@ -271,11 +288,12 @@ def er_pair(a_id: str, b_id: str):
     return ER_RECORDS[a_id], ER_RECORDS[b_id]
 
 
-def er_rows(ra: dict, rb: dict, p_same: float) -> str:
+def er_rows(ra: dict, rb: dict, p_same: float, heading: bool = True) -> str:
     """Name matching and Jev on one pair, then our label."""
     baseline = results.er_baseline()[(ra["id"], rb["id"])]
     same = (ra["id"], rb["id"]) in results.ER_GOLD
     return answers(
+        head("Method", "Probability: same organisation") if heading else "",
         row(
             "Name matching (Levenshtein)",
             er.name_similarity(ra, rb),
@@ -332,7 +350,11 @@ def pii_p(answer) -> dict[str, float]:
 
 def pii_bars(p: dict[str, float]) -> str:
     return answers(
-        *(row(results.CATEGORY_NAMES[c], p[c], [pii.THRESHOLD]) for c in pii.CATEGORIES)
+        head("Kind of personal data", "Probability it's in the text", ""),
+        *(
+            row(results.CATEGORY_NAMES[c], p[c], [pii.THRESHOLD])
+            for c in pii.CATEGORIES
+        ),
     )
 
 
@@ -353,7 +375,7 @@ def system_one():
     state, questions = dq.check_request(check, value)
     answer = judge().ask(state, questions)
     with example(quote(questions["passes"].instructions), state, questions):
-        st.html(label("Jev's answer") + answers(dq_row(check, value, answer)))
+        st.html(answers(head("Value"), dq_row(check, value, answer)))
     st.html(
         '<div class="g-cards">'
         '<div class="g-card"><b>Noul</b>A yes/no question. One probability that the answer is yes.</div>'
@@ -423,15 +445,13 @@ def dq_values():
     }
     parts = []
     for cid, check in checks.items():
-        parts.append(
-            group(
-                f"<b>{html.escape(results.check_label(cid))}</b> {html.escape(check.check)}"
-            )
-        )
+        # Each check's own question sits right over its answers.
+        _, asks = dq.check_request(check, examples[cid][0])
+        parts += [group(quote(asks["passes"].instructions, small=True)), head("Value")]
         parts += [dq_row(check, v, replies[(cid, v)]) for v in examples[cid]]
     state, questions = dq.check_request(checks[shown[0]], shown[1])
-    with example(quote(questions["passes"].instructions), state, questions):
-        st.html(label("Jev's answer, once per distinct value") + answers(*parts))
+    with example("", state, questions):
+        st.html(answers(*parts))
 
 
 def dq_choice():
@@ -445,7 +465,7 @@ def dq_choice():
         for v in ("concurrent was goedkoper", "budget bevroren", "kwaliteit viel tegen")
     ]
     replies = judge().ask_many([dq.check_request(check, v) for v in values])
-    parts = []
+    parts = [head("Code, top two", "Probability")]
     for value, reply in zip(values, replies, strict=True):
         probabilities = reply.response.choices["code"].probabilities
         p = dq_p(check, value, reply)
@@ -468,12 +488,11 @@ def dq_choice():
         for c, d in check.codes.items()
     )
     with example(
-        quote(questions["code"].instructions)
-        + f'<div class="g-codes two">{codes}</div>',
+        quote(questions["code"].instructions) + f'<div class="g-codes">{codes}</div>',
         state,
         questions,
     ):
-        st.html(label("Jev's answer: the top two options") + answers(*parts))
+        st.html(answers(*parts))
 
 
 def dq_scale():
@@ -497,12 +516,12 @@ def dq_scale():
         "check",
         [pipeline.LO, pipeline.HI],
         ["value", "p_pass", "code", "decision"],
-        height=200,
-        x_title="Jev's confidence that the value passes",
-    )
-    st.caption(
-        f"One dot per distinct value. Left of {pipeline.LO:.2f} reject, right of {pipeline.HI:.2f} accept; "
-        "in between, review."
+        height=240,
+        title="Does the value pass its check?",
+        subtitle=(
+            f"One dot per distinct value. Left of {pipeline.LO:.2f} reject, right of {pipeline.HI:.2f} accept; "
+            "in between, review."
+        ),
     )
 
 
@@ -516,9 +535,8 @@ def er_same_name():
     answer = judge().ask(state, questions)
     with example(quote(questions["same"].instructions), state, questions):
         st.html(
-            label("The two records")
-            + records_table(ra, rb)
-            + label("Answers")
+            records_table(ra, rb)
+            + '<div class="g-gap"></div>'
             + er_rows(ra, rb, answer.response.nouls["same"].noul)
         )
 
@@ -537,14 +555,14 @@ def er_other_name():
     pairs = [er_pair("A01", "B01"), er_pair("A06", "B06"), er_pair("A09", "B08")]
     replies = judge().ask_many([er.pair_request(ra, rb) for ra, rb in pairs])
     blocks = []
-    for (ra, rb), reply in zip(pairs, replies, strict=True):
+    for i, ((ra, rb), reply) in enumerate(zip(pairs, replies, strict=True)):
         names = "".join(
             f"<div><span>{r['id']}</span>{html.escape(r['name'])}</div>"
             for r in (ra, rb)
         )
+        rows = er_rows(ra, rb, reply.response.nouls["same"].noul, heading=i == 0)
         blocks.append(
-            f'<div class="g-pair"><div class="g-names">{names}</div>'
-            f"<div>{er_rows(ra, rb, reply.response.nouls['same'].noul)}</div></div>"
+            f'<div class="g-pair"><div class="g-names">{names}</div><div>{rows}</div></div>'
         )
     st.html("".join(blocks))
 
@@ -582,11 +600,11 @@ def er_scale():
         [er.LO, er.HI],
         ["pair", "p_same", "decision", "gold"],
         height=160,
-        x_title="Jev's confidence that both records are the same supplier",
-    )
-    st.caption(
-        f"One dot per pair that no exact KvK or IBAN rule settled. Left of {er.LO:.2f} reject, "
-        f"right of {er.HI:.2f} accept; in between, review."
+        title="Are both records the same supplier?",
+        subtitle=(
+            f"One dot per pair that no exact KvK or IBAN rule settled. Left of {er.LO:.2f} reject, "
+            f"right of {er.HI:.2f} accept; in between, review."
+        ),
     )
 
 
@@ -605,9 +623,11 @@ def schema_example():
     pick = decided[second["source_col"]]
     with example(quote(questions["target"].instructions), state, questions):
         st.html(
-            label("Jev's answer: the top four options")
-            + source_block(source)
-            + answers(*(row(option, p, [schema.CONFIDENT]) for option, p in top))
+            source_block(source)
+            + answers(
+                head("Target column, top four", "Probability", ""),
+                *(row(option, p, [schema.CONFIDENT]) for option, p in top),
+            )
             + mapping_line(decided[source["source_col"]])
             + '<div class="g-small">'
             + source_block(second)
@@ -667,11 +687,7 @@ def pii_example():
         before=f"Regex found: {', '.join(sorted(hits)) or 'nothing'}"
     )
     with example(top, state, questions):
-        st.html(
-            label("Jev's answer: a probability per kind of data")
-            + pii_bars(p)
-            + verdict(route_chip(pii.route(hits, p)), before="Route")
-        )
+        st.html(pii_bars(p) + verdict(route_chip(pii.route(hits, p)), before="Route"))
     rows = ""
     for nid in ("N16", "N19"):
         other = NOTES[nid]["text"]
