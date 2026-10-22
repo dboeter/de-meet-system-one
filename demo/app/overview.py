@@ -7,7 +7,7 @@ import results
 import streamlit as st
 
 import ui
-from jevdemo import dq, er, pipeline, schema
+from jevdemo import dq, er, pipeline
 
 st.html(ui.CSS)
 st.title("Code for the clear cases, Jev for the rest")
@@ -52,10 +52,7 @@ STATIONS = [
         "stations/schema.py",
         "Schema mapping",
         "Which target column holds this source column's data?",
-        results.schema_claim(
-            results.schema_table(decided),
-            schema.evaluate(decided, results.SCHEMA_GOLD),
-        ),
+        results.schema_claim(results.schema_table(decided)),
     ),
     (
         "stations/pii.py",

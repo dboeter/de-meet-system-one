@@ -187,7 +187,7 @@ def schema_table(decided: list[dict]) -> pd.DataFrame:
     return table
 
 
-def schema_claim(table: pd.DataFrame, scores: dict) -> Claim:
+def schema_claim(table: pd.DataFrame) -> Claim:
     prefilled = table["decision"] == "accept"
     right, wrong = (
         int((prefilled & table["correct"]).sum()),

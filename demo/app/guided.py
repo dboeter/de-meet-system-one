@@ -640,7 +640,7 @@ def schema_example():
 def schema_scale():
     decided = results.schema_mappings(ui.mode())
     table = results.schema_table(decided)
-    c = results.schema_claim(table, schema.evaluate(decided, results.SCHEMA_GOLD))
+    c = results.schema_claim(table)
     lead(c.headline)
     accepted = table["decision"] == "accept"
     figures(

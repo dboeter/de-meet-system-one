@@ -13,7 +13,7 @@ shortlists = results.SHORTLISTS
 decided = results.schema_mappings(ui.mode())
 scores = schema.evaluate(decided, gold)
 table = results.schema_table(decided)
-ui.claim(finding, results.schema_claim(table, scores))
+ui.claim(finding, results.schema_claim(table))
 
 left, chart = st.columns([1, 2], gap="large")
 with left:
