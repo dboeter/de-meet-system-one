@@ -82,76 +82,78 @@ def your_turn():
             st.warning(str(e))
 
 
-st.subheader("Run manifest")
-st.dataframe(
-    pd.DataFrame(manifest["checks"]).T.rename_axis("check").reset_index(),
-    hide_index=True,
-    column_config={
-        "fail_rate": st.column_config.NumberColumn(format="percent"),
-        "max_fail_rate": st.column_config.NumberColumn("limit", format="percent"),
-    },
-)
+with st.expander("Details"):
+    st.subheader("Run manifest")
+    st.dataframe(
+        pd.DataFrame(manifest["checks"]).T.rename_axis("check").reset_index(),
+        hide_index=True,
+        column_config={
+            "fail_rate": st.column_config.NumberColumn(format="percent"),
+            "max_fail_rate": st.column_config.NumberColumn("limit", format="percent"),
+        },
+    )
 
-quarantine, review, codes, labels = st.tabs(
-    ["Quarantine", "Review queue", "Cancel reason → code", "Against our labels"]
-)
-with quarantine:
-    st.caption(
-        "Rows Jev rejected on a quarantine or fail_run check. They stay out of gold until fixed."
+    quarantine, review, codes, labels = st.tabs(
+        ["Quarantine", "Review queue", "Cancel reason → code", "Against our labels"]
     )
-    st.dataframe(
-        pd.DataFrame(
-            result.quarantine, columns=["row_id", "check_id", "value", "p_pass"]
-        ),
-        hide_index=True,
-        column_config={"p_pass": ui.P_COLUMN},
-    )
-with review:
-    st.caption("Jev wasn't sure: review instead of a silent accept or reject.")
-    st.dataframe(
-        decided[decided["decision"] == "review"].drop_duplicates(["check_id", "value"])[
-            ["check_id", "value", "p_pass", "code"]
-        ],
-        hide_index=True,
-        column_config={"p_pass": ui.P_COLUMN},
-    )
-with codes:
-    st.caption(
-        "A Choice over the code list; other when none fits, which counts as failing."
-    )
-    st.dataframe(
-        decided[decided["check_id"] == "cancel_reason_code"].drop_duplicates("value")[
-            ["value", "code", "p_pass", "decision"]
-        ],
-        hide_index=True,
-        column_config={"p_pass": ui.P_COLUMN},
-    )
-with labels:
-    by_id = {r["row_id"]: r for r in rows}
-    truth = {
-        "address_is_postal": lambda r: r["is_address"],
-        "description_names_product": lambda r: r["is_product_description"],
-        "cancel_reason_code": lambda r: r["cancel_code"] != "other",
-    }
-    auto = decided[decided["decision"] != "review"].copy()
-    auto["correct"] = [
-        (d == "accept") == truth[c](by_id[r])
-        for c, d, r in zip(auto["check_id"], auto["decision"], auto["row_id"])
-    ]
-    mapped = decided[decided["check_id"] == "cancel_reason_code"]
-    code_ok = sum(
-        c == by_id[r]["cancel_code"] for c, r in zip(mapped["code"], mapped["row_id"])
-    )
-    st.caption("Only auto-decided rows count; review rows don't count.")
-    st.dataframe(
-        auto.groupby("check_id")["correct"]
-        .agg(["sum", "count"])
-        .rename(columns={"sum": "correct", "count": "auto-decided"})
-    )
-    st.markdown(f"Cancel codes matching the label: **{code_ok} of {len(mapped)}**")
+    with quarantine:
+        st.caption(
+            "Rows Jev rejected on a quarantine or fail_run check. They stay out of gold until fixed."
+        )
+        st.dataframe(
+            pd.DataFrame(
+                result.quarantine, columns=["row_id", "check_id", "value", "p_pass"]
+            ),
+            hide_index=True,
+            column_config={"p_pass": ui.P_COLUMN},
+        )
+    with review:
+        st.caption("Jev wasn't sure: review instead of a silent accept or reject.")
+        st.dataframe(
+            decided[decided["decision"] == "review"].drop_duplicates(
+                ["check_id", "value"]
+            )[["check_id", "value", "p_pass", "code"]],
+            hide_index=True,
+            column_config={"p_pass": ui.P_COLUMN},
+        )
+    with codes:
+        st.caption(
+            "A Choice over the code list; other when none fits, which counts as failing."
+        )
+        st.dataframe(
+            decided[decided["check_id"] == "cancel_reason_code"].drop_duplicates(
+                "value"
+            )[["value", "code", "p_pass", "decision"]],
+            hide_index=True,
+            column_config={"p_pass": ui.P_COLUMN},
+        )
+    with labels:
+        by_id = {r["row_id"]: r for r in rows}
+        truth = {
+            "address_is_postal": lambda r: r["is_address"],
+            "description_names_product": lambda r: r["is_product_description"],
+            "cancel_reason_code": lambda r: r["cancel_code"] != "other",
+        }
+        auto = decided[decided["decision"] != "review"].copy()
+        auto["correct"] = [
+            (d == "accept") == truth[c](by_id[r])
+            for c, d, r in zip(auto["check_id"], auto["decision"], auto["row_id"])
+        ]
+        mapped = decided[decided["check_id"] == "cancel_reason_code"]
+        code_ok = sum(
+            c == by_id[r]["cancel_code"]
+            for c, r in zip(mapped["code"], mapped["row_id"])
+        )
+        st.caption("Only auto-decided rows count; review rows don't count.")
+        st.dataframe(
+            auto.groupby("check_id")["correct"]
+            .agg(["sum", "count"])
+            .rename(columns={"sum": "correct", "count": "auto-decided"})
+        )
+        st.markdown(f"Cancel codes matching the label: **{code_ok} of {len(mapped)}**")
 
-st.subheader("The checks are config")
-st.code(dq.CHECKS.read_text(), language=None, wrap_lines=True)
+    st.subheader("The checks are config")
+    st.code(dq.CHECKS.read_text(), language=None, wrap_lines=True)
 ui.request_view(
     *dq.check_request(checks[0], rows[0][checks[0].column]),
     label="What Jev receives: a Noul",

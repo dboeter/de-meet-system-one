@@ -46,9 +46,9 @@ CSS = """
 /* Streamlit's header lies over the top 56px and catches clicks there, with or without a background:
    start below it, or it covers the top of Back and Next. */
 [data-testid="stMainBlockContainer"] { padding-top: 4.5rem; }
-[data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] { gap: .75rem; }
+[data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] { gap: 1.75rem; }
 .claim { font-size: 36px; }
-.support { margin: 8px 0 4px; }
+.support { margin: 12px 0 0; }
 .st-key-guided-eyebrow p { margin: 0; font-size: 14px; font-weight: 600; letter-spacing: .08em;
   text-transform: uppercase; color: #3d3d3d; }
 .st-key-guided-pgup, .st-key-guided-pgdn { display: none; }
@@ -66,7 +66,7 @@ CSS = """
 .g-records + .g-label { margin-top: 14px; }
 /* One grid per answer list, so the bars and chips line up from row to row. */
 .g-answers { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(80px, 110px) auto;
-  align-items: center; gap: 8px 12px; max-width: 560px; }
+  align-items: center; gap: 12px 14px; max-width: 560px; }
 .g-answers .g-group { grid-column: 1 / -1; margin-top: 6px; font-size: 14px; color: #3d3d3d; }
 .g-answers .g-group b { color: #0a0a0a; }
 .g-p { text-align: right; color: #3d3d3d; }
@@ -194,10 +194,10 @@ def quote(text: str, data: bool = False) -> str:
     return f'<blockquote class="g-quote{" data" if data else ""}">{body}</blockquote>'
 
 
-def lead(headline: str, support: str):
-    st.html(
-        f'<p class="claim">{html.escape(headline)}</p><p class="support">{html.escape(support)}</p>'
-    )
+def lead(headline: str, support: str = ""):
+    """The headline, and at most one sentence under it."""
+    under = f'<p class="support">{html.escape(support)}</p>' if support else ""
+    st.html(f'<p class="claim">{html.escape(headline)}</p>{under}')
 
 
 def figures(*items: tuple[str, object, str]):
@@ -346,8 +346,7 @@ def route_chip(route: str) -> str:
 def system_one():
     lead(
         step().title,
-        "Jev is TypeSafe's System One model. You send it a row and a question in plain words. "
-        "It sends back a probability, so your code decides what happens next.",
+        "You send Jev a row and a question in plain words; it sends back a probability.",
     )
     check = dq_check("address_is_postal")
     value = dq_value(check, "Postbus 1200, 3000 BE Rotterdam")
@@ -371,8 +370,7 @@ def system_one():
 def code_and_jev():
     lead(
         step().title,
-        "Jev is one step in a pipeline you already own. Code finds the candidates and settles what rules can "
-        "settle. Jev judges the rest. A threshold you set turns its probability into accept, review or reject.",
+        "Code settles what rules can; Jev judges the rest.",
     )
     buckets = "".join(chip(b, c) for b, c in ui.BUCKET_COLOURS.items())
     st.html(
@@ -393,8 +391,7 @@ def code_and_jev():
 def dq_values():
     lead(
         step().title,
-        "None of these is null or the wrong type, so type, null and range checks pass them all. "
-        "Each check is one sentence of config.",
+        "Type, null and range checks let all of these through.",
     )
     examples = {
         "address_is_postal": [
@@ -440,7 +437,7 @@ def dq_values():
 def dq_choice():
     lead(
         step().title,
-        "The same idea with a Choice: map free text to a code list. When no code fits, 'other' is an answer too.",
+        "Map free text to a code list; when no code fits, 'other' is an answer too.",
     )
     check = dq_check("cancel_reason_code")
     values = [
@@ -483,7 +480,7 @@ def dq_scale():
     judgments, first, rerun = results.dq_judgments(ui.mode())
     result = dq.run(results.ROWS, results.CHECKS, judgments, pipeline.LO, pipeline.HI)
     c = results.dq_claim(result, first, rerun)
-    lead(c.headline, c.support)
+    lead(c.headline)
     figures(
         ("Row checks", len(results.ROWS) * len(results.CHECKS), ""),
         ("Questions to Jev", first.asked, ""),
@@ -512,7 +509,7 @@ def dq_scale():
 def er_same_name():
     lead(
         step().title,
-        "Name matching sees two identical names. Jev reads the whole record.",
+        "Name matching sees identical names; Jev reads the whole record.",
     )
     ra, rb = er_pair("A02", "B02")
     state, questions = er.pair_request(ra, rb)
@@ -561,7 +558,7 @@ def er_scale():
         "Jev": er.evaluate(jev, results.ER_GOLD),
     }
     c = results.er_claim(scores)
-    lead(c.headline, c.support)
+    lead(c.headline)
     figures(
         ("Possible pairs", len(results.ER_A) * len(results.ER_B), ""),
         ("After blocking", len(results.PAIRS), ""),
@@ -596,7 +593,7 @@ def er_scale():
 def schema_example():
     lead(
         step().title,
-        "A legacy column with no comment. Jev picks a target column from a shortlist and reads the sample values.",
+        "A legacy column without a comment: Jev picks a target from a shortlist.",
     )
     decided = {d["source_col"]: d for d in results.schema_mappings(ui.mode())}
     source, second = SOURCES["KLANT.KLT_NM_VOL"], SOURCES["KLANT.KLT_OPM"]
@@ -624,7 +621,13 @@ def schema_scale():
     decided = results.schema_mappings(ui.mode())
     table = results.schema_table(decided)
     c = results.schema_claim(table, schema.evaluate(decided, results.SCHEMA_GOLD))
-    lead(c.headline, c.support)
+    lead(c.headline)
+    accepted = table["decision"] == "accept"
+    figures(
+        ("Accepted", int(accepted.sum()), ""),
+        ("Accepted and wrong", int((accepted & ~table["correct"]).sum()), ""),
+        ("Review", int((~accepted).sum()), ""),
+    )
     st.html(label("Where Jev was wrong"))
     wrong = table[~table["correct"]]
     static_table(
@@ -653,7 +656,7 @@ def schema_scale():
 def pii_example():
     lead(
         step().title,
-        "Regex with checksums finds BSN, IBAN, phone and email. It can't read context.",
+        "Regex finds numbers like BSN and IBAN, but can't read context.",
     )
     text = NOTES["N01"]["text"]
     hits = pii.regex_hits(text)
@@ -691,7 +694,7 @@ def pii_example():
 def pii_scale():
     routed = results.pii_routed(results.pii_probs(ui.mode()))
     c = results.pii_claim(routed)
-    lead(c.headline, c.support)
+    lead(c.headline)
     counts = routed["route"].value_counts()
     figures(
         *(
@@ -704,8 +707,7 @@ def pii_scale():
 def your_turn():
     lead(
         step().title,
-        "A Dutch sentence from the room. Regex runs first; if it finds nothing, Jev screens it for the five "
-        "kinds of personal data.",
+        "Regex runs first; if it finds nothing, Jev screens the sentence.",
     )
     with st.form("guided-live"):
         text = st.text_area("A Dutch sentence", pii.LIVE_PRESET, height=80)

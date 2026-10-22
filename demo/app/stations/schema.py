@@ -87,45 +87,46 @@ def your_turn():
             )
 
 
-mapping, wrong, yml, tried, data = st.tabs(
-    [
-        "Mapping table",
-        "Where it went wrong",
-        "dbt sources.yml",
-        "What we tried",
-        "Source and target",
-    ]
-)
-with mapping:
-    st.dataframe(table, hide_index=True, column_config={"p": ui.P_COLUMN})
-with wrong:
-    st.caption(
-        "A wrong answer in review costs a minute. A wrong answer that was accepted is the expensive kind."
+with st.expander("Details"):
+    mapping, wrong, yml, tried, data = st.tabs(
+        [
+            "Mapping table",
+            "Where it went wrong",
+            "dbt sources.yml",
+            "What we tried",
+            "Source and target",
+        ]
     )
-    st.dataframe(
-        table[~table["correct"]], hide_index=True, column_config={"p": ui.P_COLUMN}
-    )
-with yml:
-    st.caption("Only accepted mappings; review rows are left out.")
-    st.code(
-        schema.sources_yml(decided, source_name="legacy_crm"),
-        language=None,
-        wrap_lines=True,
-    )
-with tried:
-    st.markdown(
-        "- **Current:** `none` as one of the Choice options, no `(type)` suffix on option descriptions, "
-        "the source system in state. 80% top-1, 64% of columns pre-filled correctly.\n"
-        "- **As first specified** (type suffix, no source system): 76% top-1, 60% pre-filled, one wrong pre-fill.\n"
-        "- Adding generic context to the question: 64% pre-filled correctly.\n"
-        "- Replacing the `none` option with a companion Noul: 36%, because the Noul was under-confident on most columns.\n"
-        "\n"
-        "The errors are mostly Dutch abbreviations without comments (`VRZ`, `BTW`); "
-        "a consultant's abbreviation list is the obvious next lever."
-    )
-with data:
-    st.dataframe(pd.DataFrame(sources), hide_index=True)
-    st.dataframe(pd.DataFrame(targets), hide_index=True)
+    with mapping:
+        st.dataframe(table, hide_index=True, column_config={"p": ui.P_COLUMN})
+    with wrong:
+        st.caption(
+            "A wrong answer in review costs a minute. A wrong answer that was accepted is the expensive kind."
+        )
+        st.dataframe(
+            table[~table["correct"]], hide_index=True, column_config={"p": ui.P_COLUMN}
+        )
+    with yml:
+        st.caption("Only accepted mappings; review rows are left out.")
+        st.code(
+            schema.sources_yml(decided, source_name="legacy_crm"),
+            language=None,
+            wrap_lines=True,
+        )
+    with tried:
+        st.markdown(
+            "- **Current:** `none` as one of the Choice options, no `(type)` suffix on option descriptions, "
+            "the source system in state. 80% top-1, 64% of columns pre-filled correctly.\n"
+            "- **As first specified** (type suffix, no source system): 76% top-1, 60% pre-filled, one wrong pre-fill.\n"
+            "- Adding generic context to the question: 64% pre-filled correctly.\n"
+            "- Replacing the `none` option with a companion Noul: 36%, because the Noul was under-confident on most columns.\n"
+            "\n"
+            "The errors are mostly Dutch abbreviations without comments (`VRZ`, `BTW`); "
+            "a consultant's abbreviation list is the obvious next lever."
+        )
+    with data:
+        st.dataframe(pd.DataFrame(sources), hide_index=True)
+        st.dataframe(pd.DataFrame(targets), hide_index=True)
 
 example = next(s for s in sources if s["source_col"] == "KLANT.KLT_NM_VOL")
 ui.request_view(*schema.mapping_request(example, targets))

@@ -55,8 +55,7 @@ with chart:
     )
 
 
-def closing():
-    """Your turn, then the gate."""
+def your_turn():
     st.subheader("Your turn")
     with st.form("live"):
         text = st.text_area("A Dutch note", pii.LIVE_PRESET, height=80)
@@ -80,72 +79,72 @@ def closing():
             except (NotRecorded, LiveUnavailable) as e:
                 st.warning(str(e))
 
+
+with st.expander("Details"):
+    route_tab, cats, extra, regex = st.tabs(
+        ["Routing", "Per category", "Flagged beyond our labels", "Regex hits"]
+    )
+    with route_tab:
+        st.caption(
+            "Health and Art. 9 → excluded from gold. Other categories Jev finds → restricted, because Jev says "
+            "whether, not where. Regex hits → masked, because code knows the span."
+        )
+        st.dataframe(routed, hide_index=True)
+    with cats:
+        rows = []
+        for c in pii.CATEGORIES:
+            flagged = {i for i, p in probs.items() if p[c] >= pii.THRESHOLD}
+            truth = {n["id"] for n in rest if n[c]}
+            rows.append(
+                {
+                    "category": c,
+                    "labelled": len(truth),
+                    "caught": len(flagged & truth),
+                    "extra flags": len(flagged - truth),
+                    "recall": len(flagged & truth) / len(truth) if truth else None,
+                }
+            )
+        st.caption(
+            "Recall is the metric that matters; precision is what the low threshold costs."
+        )
+        st.dataframe(
+            pd.DataFrame(rows),
+            hide_index=True,
+            column_config={"recall": st.column_config.NumberColumn(format="percent")},
+        )
+    with extra:
+        st.caption(
+            "Some are arguably right (an unnamed meneer is still a private individual); they show the cost of leaning towards recall."
+        )
+        by_id = {n["id"]: n for n in rest}
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {"id": i, "category": c, "p": p[c], "text": by_id[i]["text"]}
+                    for i, p in probs.items()
+                    for c in pii.CATEGORIES
+                    if p[c] >= pii.THRESHOLD and not by_id[i][c]
+                ],
+                columns=["id", "category", "p", "text"],
+            ),
+            hide_index=True,
+            column_config={"p": ui.P_COLUMN},
+        )
+    with regex:
+        st.caption(
+            "BSN must pass the 11-check and IBAN mod-97, so an order number doesn't count. A hit skips Jev."
+        )
+        st.dataframe(
+            routed[routed["regex"] != ""][["id", "text", "regex"]], hide_index=True
+        )
+
     st.subheader("The gate before client data")
     st.markdown(
         results.GATE
         + "\n\n- A regex hit skips Jev, so a note with a phone number and health details is only masked.\n"
-        "- Jev says whether a note contains PII, not where. Masking the span is a later step.\n\n"
-        "More depth: the jevex demo (`../jevex`) compares regex and Jev on customer-service email."
-    )
-
-
-route_tab, cats, extra, regex = st.tabs(
-    ["Routing", "Per category", "Flagged beyond our labels", "Regex hits"]
-)
-with route_tab:
-    st.caption(
-        "Health and Art. 9 → excluded from gold. Other categories Jev finds → restricted, because Jev says "
-        "whether, not where. Regex hits → masked, because code knows the span."
-    )
-    st.dataframe(routed, hide_index=True)
-with cats:
-    rows = []
-    for c in pii.CATEGORIES:
-        flagged = {i for i, p in probs.items() if p[c] >= pii.THRESHOLD}
-        truth = {n["id"] for n in rest if n[c]}
-        rows.append(
-            {
-                "category": c,
-                "labelled": len(truth),
-                "caught": len(flagged & truth),
-                "extra flags": len(flagged - truth),
-                "recall": len(flagged & truth) / len(truth) if truth else None,
-            }
-        )
-    st.caption(
-        "Recall is the metric that matters; precision is what the low threshold costs."
-    )
-    st.dataframe(
-        pd.DataFrame(rows),
-        hide_index=True,
-        column_config={"recall": st.column_config.NumberColumn(format="percent")},
-    )
-with extra:
-    st.caption(
-        "Some are arguably right (an unnamed meneer is still a private individual); they show the cost of leaning towards recall."
-    )
-    by_id = {n["id"]: n for n in rest}
-    st.dataframe(
-        pd.DataFrame(
-            [
-                {"id": i, "category": c, "p": p[c], "text": by_id[i]["text"]}
-                for i, p in probs.items()
-                for c in pii.CATEGORIES
-                if p[c] >= pii.THRESHOLD and not by_id[i][c]
-            ],
-            columns=["id", "category", "p", "text"],
-        ),
-        hide_index=True,
-        column_config={"p": ui.P_COLUMN},
-    )
-with regex:
-    st.caption(
-        "BSN must pass the 11-check and IBAN mod-97, so an order number doesn't count. A hit skips Jev."
-    )
-    st.dataframe(
-        routed[routed["regex"] != ""][["id", "text", "regex"]], hide_index=True
+        "- Jev says whether a note contains PII, not where. Masking the span is a later step."
     )
 
 ui.request_view(*pii.screen_request(notes[0]["text"]))
 
-closing()
+your_turn()

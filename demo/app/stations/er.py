@@ -100,65 +100,66 @@ def your_turn():
             st.warning(str(e))
 
 
-st.subheader("Jev against the fuzzy-match baseline")
-st.caption(
-    "Same candidates, same exact rules. Baseline: Levenshtein similarity on normalized names, "
-    f"≥ {results.BASELINE_CUTS[1]:.2f} accept, ≤ {results.BASELINE_CUTS[0]:.2f} reject."
-)
-st.dataframe(
-    pd.DataFrame(scores).T.rename_axis("method").reset_index(),
-    hide_index=True,
-    column_config={
-        "precision": st.column_config.NumberColumn(format="percent"),
-        "recall": st.column_config.NumberColumn(format="percent"),
-    },
-)
+with st.expander("Details"):
+    st.subheader("Jev against the fuzzy-match baseline")
+    st.caption(
+        "Same candidates, same exact rules. Baseline: Levenshtein similarity on normalized names, "
+        f"≥ {results.BASELINE_CUTS[1]:.2f} accept, ≤ {results.BASELINE_CUTS[0]:.2f} reject."
+    )
+    st.dataframe(
+        pd.DataFrame(scores).T.rename_axis("method").reset_index(),
+        hide_index=True,
+        column_config={
+            "precision": st.column_config.NumberColumn(format="percent"),
+            "recall": st.column_config.NumberColumn(format="percent"),
+        },
+    )
 
-matched, disagree, clustered, tables = st.tabs(
-    ["Match table", "Where they disagree", "Clusters", "Source tables"]
-)
-with matched:
-    st.dataframe(
-        table.sort_values("p_same", ascending=False),
-        hide_index=True,
-        column_config={"p_same": ui.P_COLUMN},
+    matched, disagree, clustered, tables = st.tabs(
+        ["Match table", "Where they disagree", "Clusters", "Source tables"]
     )
-with disagree:
-    st.dataframe(
-        pd.DataFrame(
-            [
-                {
-                    "pair": f"{names[x]} | {names[y]}",
-                    "gold": (x, y) in gold,
-                    "Levenshtein": fuzzy[(x, y)],
-                    "Jev": jev[(x, y)],
-                }
-                for x, y in jev
-                if fuzzy[(x, y)] != jev[(x, y)]
-            ],
-            columns=["pair", "gold", "Levenshtein", "Jev"],
-        ),
-        hide_index=True,
-    )
-with clustered:
-    st.caption("Union-find over the merges gives every record a cluster id.")
-    cluster_of = er.clusters(
-        [r["id"] for r in a + b],
-        [(m["id_a"], m["id_b"]) for m in matches if m["decision"] == "accept"],
-    )
-    grouped = pd.DataFrame(
-        [{"cluster": c, "id": i, "name": names[i]} for i, c in cluster_of.items()]
-    )
-    st.dataframe(
-        grouped[grouped.duplicated("cluster", keep=False)].sort_values(
-            ["cluster", "id"]
-        ),
-        hide_index=True,
-    )
-with tables:
-    ta, tb = st.columns(2)
-    ta.dataframe(pd.DataFrame(a), hide_index=True)
-    tb.dataframe(pd.DataFrame(b), hide_index=True)
+    with matched:
+        st.dataframe(
+            table.sort_values("p_same", ascending=False),
+            hide_index=True,
+            column_config={"p_same": ui.P_COLUMN},
+        )
+    with disagree:
+        st.dataframe(
+            pd.DataFrame(
+                [
+                    {
+                        "pair": f"{names[x]} | {names[y]}",
+                        "gold": (x, y) in gold,
+                        "Levenshtein": fuzzy[(x, y)],
+                        "Jev": jev[(x, y)],
+                    }
+                    for x, y in jev
+                    if fuzzy[(x, y)] != jev[(x, y)]
+                ],
+                columns=["pair", "gold", "Levenshtein", "Jev"],
+            ),
+            hide_index=True,
+        )
+    with clustered:
+        st.caption("Union-find over the merges gives every record a cluster id.")
+        cluster_of = er.clusters(
+            [r["id"] for r in a + b],
+            [(m["id_a"], m["id_b"]) for m in matches if m["decision"] == "accept"],
+        )
+        grouped = pd.DataFrame(
+            [{"cluster": c, "id": i, "name": names[i]} for i, c in cluster_of.items()]
+        )
+        st.dataframe(
+            grouped[grouped.duplicated("cluster", keep=False)].sort_values(
+                ["cluster", "id"]
+            ),
+            hide_index=True,
+        )
+    with tables:
+        ta, tb = st.columns(2)
+        ta.dataframe(pd.DataFrame(a), hide_index=True)
+        tb.dataframe(pd.DataFrame(b), hide_index=True)
 
 jansen = next(p for p in ambiguous if p[0]["id"] == "A02")
 ui.request_view(*er.pair_request(*jansen))
