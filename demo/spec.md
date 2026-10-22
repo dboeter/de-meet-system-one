@@ -44,8 +44,8 @@ synthetic rows → code step (normalize / block / regex / shortlist / dedupe)
   `warn | quarantine | fail_run`); distinct values first; cache by `(check_id, value_hash)`.
 - **Jev:** one Noul per distinct value per check; a Choice over the code list plus
   `other/none` for `cancel_reason`.
-- **Prompt variants:** `checks_variants.yaml`, same ids, compared in the notebook. Naming the
-  property the labels encode in the address check (one building, its own house number)
+- **Prompt variants:** `checks_variants.yaml`, same ids, compared in the notebook. Asking for
+  one specific building with its own house number in the address check
   lifted the lowest true row from 0.68 to 0.87 and cut review from 5 to 3 rows. Splitting the
   cancel check into a pass Noul plus a code Choice did worse: review 1 → 7 rows, lowest true
   row 0.94 → 0.67; `1 - p(other)` stays.
