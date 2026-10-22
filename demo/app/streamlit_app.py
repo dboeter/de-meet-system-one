@@ -14,6 +14,9 @@ page = st.navigation(
         "": [
             st.Page("guided.py", title="Guided walkthrough", url_path="guided"),
             st.Page("overview.py", title="Overview", default=True),
+            st.Page(
+                "notes.py", title="Speaker notes", url_path="notes", visibility="hidden"
+            ),
         ],
         "Stations": [
             st.Page("stations/dq.py", title="Data quality"),

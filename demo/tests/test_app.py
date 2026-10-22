@@ -91,3 +91,10 @@ def test_guided_your_turn_answers_the_preset_from_its_recording(monkeypatch):
     assert not at.exception
     assert not at.warning
     assert any(c.value.startswith("recorded · ") for c in at.caption)
+
+
+def test_notes_window_follows_the_guided_step(monkeypatch):
+    at = open_guided(monkeypatch, "6")
+    at.switch_page("notes.py").run()
+    assert not at.exception
+    assert any("6 / 13" in m.value for m in at.markdown)

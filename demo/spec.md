@@ -159,7 +159,7 @@ demo/
 - Pipeline: thresholds → buckets, union-find clusters, manifest fail rate.
 - Recording completeness: fails if any preset or data row lacks a recording for the pinned model.
 - All four notebooks execute top to bottom in recorded mode with no key (`nbclient`).
-- The Streamlit app renders all four stations and their recorded live presets, and every guided step, with no key (`AppTest`).
+- The Streamlit app renders all four stations and their recorded live presets, every guided step and the notes window that follows it, with no key (`AppTest`).
 
 ## Done when
 

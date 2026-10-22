@@ -37,6 +37,12 @@ def judge(mode: str) -> Judge:
     return Judge(mode=mode)
 
 
+@st.cache_resource
+def guided_step() -> dict:
+    """The guided step on screen, for the notes window. Held per server: one presenter at a time."""
+    return {}
+
+
 def sidebar():
     with st.sidebar:
         key = has_key()

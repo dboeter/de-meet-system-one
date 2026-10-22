@@ -909,11 +909,21 @@ forward.button(
 )
 step().render()
 
+ui.guided_step().update(
+    n=n,
+    of=len(STEPS),
+    section=step().section,
+    title=step().title,
+    note=step().note,
+    next=STEPS[n].title if n < len(STEPS) else None,
+)
+
 with st.sidebar:
     st.subheader("Speaker note")
     st.write(step().note)
     if n < len(STEPS):
         st.caption(f"Next: {STEPS[n].title}")
+    st.markdown("[Speaker notes in a new window](notes)")  # markdown links open in a new tab
     # A new step should open at its top. The snippet sits here, at a position that doesn't depend on
     # the step's body, and carries the step number: the element only changes when the step does, so a
     # rerun on the same step ("Ask Jev", a sidebar toggle) leaves the scroll alone.
