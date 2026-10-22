@@ -49,8 +49,7 @@ with chart:
         title="Does the note reveal this kind of personal data?",
         subtitle=(
             f"One dot per note and kind of data, for the {len(rest)} notes regex found nothing in. "
-            f"Right of {pii.THRESHOLD:.2f} the note is flagged: low on purpose, because a missed flag "
-            "costs more than a review."
+            f"Right of {pii.THRESHOLD:.2f} the note is flagged."
         ),
     )
 
