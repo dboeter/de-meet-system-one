@@ -64,11 +64,10 @@ with chart:
         ["pair", "p_same", "decision", "gold"],
         height=160,
         x_title="Jev's confidence that both records are the same supplier",
-        names=results.ER_NAMES,
     )
     st.caption(
         f"One dot per pair that no exact KvK or IBAN rule settled. Left of {lo:.2f} the records "
-        f"stay apart, right of {hi:.2f} they merge; in between, a person decides."
+        f"are rejected, right of {hi:.2f} accepted; in between, review."
     )
 
 
@@ -104,7 +103,7 @@ def your_turn():
 st.subheader("Jev against the fuzzy-match baseline")
 st.caption(
     "Same candidates, same exact rules. Baseline: Levenshtein similarity on normalized names, "
-    f"≥ {results.BASELINE_CUTS[1]:.2f} merge, ≤ {results.BASELINE_CUTS[0]:.2f} keep separate."
+    f"≥ {results.BASELINE_CUTS[1]:.2f} accept, ≤ {results.BASELINE_CUTS[0]:.2f} reject."
 )
 st.dataframe(
     pd.DataFrame(scores).T.rename_axis("method").reset_index(),

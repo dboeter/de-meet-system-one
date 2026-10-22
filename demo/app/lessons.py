@@ -24,7 +24,7 @@ st.altair_chart(lessons.outcome_grid(lessons.schema_outcomes(judge)), width="con
 
 st.subheader("Data quality: how far apart pass and fail land")
 st.caption(
-    "Each dot is one row's p(pass). Rows inside the grey band go to a person; "
+    "Each dot is one row's p(pass). Rows inside the grey band go to review; "
     "a better wording pushes them out to the edges."
 )
 st.altair_chart(lessons.margin_strips(lessons.dq_margins(judge)), width="content")

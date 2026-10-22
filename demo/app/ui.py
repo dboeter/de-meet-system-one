@@ -111,15 +111,8 @@ def strip(
     colour: str | None = "decision",
     height: int = 220,
     x_title: str | None = None,
-    names: dict[str, str] | None = None,
 ):
-    """Every judged value as a dot on 0..1, one lane per `y`, with the thresholds as rules.
-
-    `names` relabels the decisions in the legend, such as accept → merge.
-    """
-    names = {b: (names or {}).get(b, b) for b in BUCKET_COLOURS}
-    if colour:
-        df = df.assign(**{colour: df[colour].map(names)})
+    """Every judged value as a dot on 0..1, one lane per `y`, with the thresholds as rules."""
     base = alt.Chart(df).transform_calculate(jitter="random()")
     encode = {
         "x": alt.X(f"{x}:Q", scale=alt.Scale(domain=[0, 1]), title=x_title or x),
@@ -129,13 +122,13 @@ def strip(
     }
     if colour:
         present = [
-            b for b in BUCKET_COLOURS if names[b] in set(df[colour])
+            b for b in BUCKET_COLOURS if b in set(df[colour])
         ]  # no legend entry without dots
         encode["color"] = alt.Color(
             f"{colour}:N",
-            sort=[names[b] for b in present],
+            sort=present,
             scale=alt.Scale(
-                domain=[names[b] for b in present],
+                domain=present,
                 range=[BUCKET_COLOURS[b] for b in present],
             ),
             legend=alt.Legend(orient="top", title=None),

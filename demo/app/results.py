@@ -44,9 +44,6 @@ CHECK_NAMES = {
     "description_names_product": ("Product description", "product descriptions"),
     "cancel_reason_code": ("Cancel reason", "cancel reasons"),
 }
-# How each station's strip names accept, review and reject.
-DQ_NAMES = {"accept": "passes", "review": "to a person", "reject": "fails"}
-
 
 def check_label(cid: str) -> str:
     return CHECK_NAMES.get(cid, (cid, cid))[0]
@@ -86,7 +83,7 @@ def dq_claim(result, first, rerun) -> Claim:
     held = len({r["row_id"] for r in result.quarantine})
     return Claim(
         headline,
-        f"{held} rows stay out of gold and {review} answers go to a person. "
+        f"{held} rows stay out of gold and {review} answers go to review. "
         f"{len(ROWS) * len(CHECKS)} row checks took {first.asked} questions to Jev; "
         f"a rerun on the same values takes {rerun.asked}.",
     )
@@ -94,7 +91,6 @@ def dq_claim(result, first, rerun) -> Claim:
 
 # --- Entity resolution ---
 
-ER_NAMES = {"accept": "merge", "review": "to a person", "reject": "keep apart"}
 # The fuzzy-match baseline cuts name similarity here; Jev's own cuts are er.LO / er.HI.
 BASELINE_CUTS = (0.50, 0.85)
 
@@ -149,15 +145,13 @@ def er_claim(scores: dict) -> Claim:
     return Claim(
         f"Jev finds {jr} of {len(ER_GOLD)} duplicate suppliers, with {wrong}. "
         f"Name matching finds {fr}.",
-        f"{scores['Jev']['review']} pairs go to a person. Name matching (Levenshtein) "
+        f"{scores['Jev']['review']} pairs go to review. Name matching (Levenshtein) "
         f"merges {scores['Levenshtein']['merged']}, {fw} of them wrong, and sends "
-        f"{scores['Levenshtein']['review']} to a person.",
+        f"{scores['Levenshtein']['review']} to review.",
     )
 
 
 # --- Schema mapping ---
-
-SCHEMA_NAMES = {"accept": "pre-filled", "review": "to the consultant"}
 
 SOURCES, TARGETS, SCHEMA_GOLD = (
     schema.load_sources(),
@@ -207,7 +201,7 @@ def schema_claim(table: pd.DataFrame, scores: dict) -> Claim:
         + ("none of them wrong." if not wrong else f"{wrong} of them wrong."),
         f"The goal was {ui.percent(PREFILL_TARGET)} of columns pre-filled correctly; "
         f"this is {ui.percent(scores['prefilled_correct'])}. The other {len(review)} go to "
-        f"the consultant with Jev's suggestion, which is right for {int(review['correct'].sum())}.",
+        f"review with Jev's suggestion, which is right for {int(review['correct'].sum())}.",
     )
 
 

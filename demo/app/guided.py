@@ -37,11 +37,9 @@ ROUTE_LINES = {
 
 CSS = """
 <style>
-/* A step is about one screen: less air above, between elements and in the headline. */
-[data-testid="stMainBlockContainer"] { padding-top: 1.5rem; }
-/* A collapsed sidebar puts the logo in the header on a white ground, over the top 56px: start below it. */
-.stApp:has([data-testid="stSidebar"][data-collapsed="true"]) [data-testid="stMainBlockContainer"] {
-  padding-top: 3.5rem; }
+/* Streamlit's header lies over the top 56px and catches clicks there, with or without a background:
+   start below it, or it covers the top of Back and Next. */
+[data-testid="stMainBlockContainer"] { padding-top: 4.5rem; }
 [data-testid="stMainBlockContainer"] > [data-testid="stVerticalBlock"] { gap: .75rem; }
 .claim { font-size: 36px; }
 .support { margin: 8px 0 4px; }
@@ -143,9 +141,9 @@ def chip(label: str, colour: str) -> str:
     )
 
 
-def landing(decision: str, names: dict[str, str]) -> str:
-    """Where a decision lands: the station's own word, in the bucket colour."""
-    return chip(names[decision], ui.BUCKET_COLOURS[decision])
+def landing(decision: str) -> str:
+    """Where a decision lands: accept, review or reject, in its colour."""
+    return chip(decision, ui.BUCKET_COLOURS[decision])
 
 
 def bar(p: float, ticks, fill: str) -> str:
@@ -221,11 +219,13 @@ def example(top: str, state, questions):
     left, right = st.columns([3, 2], gap="medium")
     with right:
         st.html(label("The request"))
+        body = request_body(state, questions)
+        body.pop("model")  # the same on every step; the room reads state and questions
         st.code(
-            json.dumps(request_body(state, questions), indent=2, ensure_ascii=False),
+            json.dumps(body, indent=2, ensure_ascii=False),
             language=None,  # plain ink, as in ui.request_view
             wrap_lines=True,
-            height=260,
+            height=480,
         )
     return left
 
@@ -257,7 +257,7 @@ def dq_row(check: dq.Check, value: str, answer) -> str:
         value,
         p,
         [pipeline.LO, pipeline.HI],
-        outcome=landing(pipeline.bucket(p), results.DQ_NAMES),
+        outcome=landing(pipeline.bucket(p)),
     )
 
 
@@ -275,13 +275,13 @@ def er_rows(ra: dict, rb: dict, p_same: float) -> str:
             er.name_similarity(ra, rb),
             results.BASELINE_CUTS,
             BASELINE_GREY,
-            landing(baseline, results.ER_NAMES),
+            landing(baseline),
         ),
         row(
             "Jev",
             p_same,
             [er.LO, er.HI],
-            outcome=landing(pipeline.bucket(p_same, er.LO, er.HI), results.ER_NAMES),
+            outcome=landing(pipeline.bucket(p_same, er.LO, er.HI)),
         ),
     ) + verdict(
         before=f"Our label: {'same organisation' if same else 'different organisations'}"
@@ -315,7 +315,7 @@ def source_block(s: dict) -> str:
 
 def mapping_line(decided_row: dict) -> str:
     return verdict(
-        landing(decided_row["decision"], results.SCHEMA_NAMES),
+        landing(decided_row["decision"]),
         after=decided_row["reason"],
     )
 
@@ -455,7 +455,7 @@ def dq_choice():
                 "p_pass = 1 − p(other)",
                 p,
                 [pipeline.LO, pipeline.HI],
-                outcome=landing(pipeline.bucket(p), results.DQ_NAMES),
+                outcome=landing(pipeline.bucket(p)),
             )
         )
     state, questions = dq.check_request(check, values[-1])
@@ -506,11 +506,10 @@ def dq_scale():
         ["value", "p_pass", "code", "decision"],
         height=200,
         x_title="Jev's confidence that the value passes",
-        names=results.DQ_NAMES,
     )
     st.caption(
-        f"One dot per distinct value. Left of {pipeline.LO:.2f} it fails, right of {pipeline.HI:.2f} it passes; "
-        "in between, a person decides."
+        f"One dot per distinct value. Left of {pipeline.LO:.2f} reject, right of {pipeline.HI:.2f} accept; "
+        "in between, review."
     )
 
 
@@ -573,11 +572,11 @@ def er_scale():
         ("After blocking", len(results.PAIRS), ""),
         ("Exact KvK/IBAN rule", len(results.EXACT), ""),
         ("Judged by Jev", len(results.AMBIGUOUS), ""),
-        ("To a person", scores["Jev"]["review"], ""),
+        ("Review", scores["Jev"]["review"], ""),
     )
     st.caption(
         "Same candidates, same exact rules. Baseline: Levenshtein similarity on normalized names, "
-        f"≥ {results.BASELINE_CUTS[1]:.2f} merge, ≤ {results.BASELINE_CUTS[0]:.2f} keep separate."
+        f"≥ {results.BASELINE_CUTS[1]:.2f} accept, ≤ {results.BASELINE_CUTS[0]:.2f} reject."
     )
     compared = pd.DataFrame(scores).T.rename_axis("method").reset_index()
     static_table(
@@ -605,11 +604,10 @@ def er_scale():
         ["pair", "p_same", "decision", "gold"],
         height=160,
         x_title="Jev's confidence that both records are the same supplier",
-        names=results.ER_NAMES,
     )
     st.caption(
-        f"One dot per pair that no exact KvK or IBAN rule settled. Left of {er.LO:.2f} the records "
-        f"stay apart, right of {er.HI:.2f} they merge; in between, a person decides."
+        f"One dot per pair that no exact KvK or IBAN rule settled. Left of {er.LO:.2f} reject, "
+        f"right of {er.HI:.2f} accept; in between, review."
     )
 
 
@@ -651,12 +649,12 @@ def schema_scale():
     static_table(
         wrong.assign(
             p=wrong["p"].map("{:.2f}".format),
-            reason=wrong["reason"].replace("", "pre-filled"),
+            reason=wrong["reason"].replace("", "accepted"),
         )[["source_col", "target_col", "p", "reason", "gold"]].rename(
             columns={
                 "source_col": "Source column",
                 "target_col": "Jev's pick",
-                "reason": "Why it went to the consultant",
+                "reason": "Reason",
                 "gold": "Right answer",
             }
         )
@@ -784,14 +782,14 @@ STEPS = [
         "Values your DQ tool lets through",
         "None of these values is null or the wrong type. The check is one sentence of config, and Jev "
         "answers once per distinct value. 'Thinkpad zoals vorige keer' names a product but points "
-        "elsewhere, so Jev is unsure and a person decides.",
+        "elsewhere, so Jev is unsure and it goes to review.",
         dq_values,
     ),
     Step(
         "Data quality",
         "Free text to a code: a Choice",
         "Nothing in 'concurrent was goedkoper' says expensive. When no code fits, 'other' wins and the "
-        "row goes to a person instead of getting a wrong code.",
+        "row goes to review instead of getting a wrong code.",
         dq_choice,
     ),
     Step(
@@ -814,7 +812,7 @@ STEPS = [
         "Different name, same organisation",
         "The other direction: a department, an abbreviation, a translated name. The criteria define what "
         "counts as the same organisation. Where Jev isn't sure, as with a hotel and a café on the same "
-        "square, a person decides.",
+        "square, it goes to review.",
         er_other_name,
     ),
     Step(
@@ -836,7 +834,7 @@ STEPS = [
         "Schema mapping",
         "Schema mapping at scale",
         "Pre-filled only when Jev is confident and no other column claims the same target. Every wrong "
-        "pick went to the consultant, not into the mapping. The output is a dbt sources.yml. It is below "
+        "pick went to review, not into the mapping. The output is a dbt sources.yml. It is below "
         "the 70% goal; most misses are abbreviations without comments.",
         schema_scale,
     ),
@@ -923,7 +921,9 @@ with st.sidebar:
     st.write(step().note)
     if n < len(STEPS):
         st.caption(f"Next: {STEPS[n].title}")
-    st.markdown("[Speaker notes in a new window](notes)")  # markdown links open in a new tab
+    st.markdown(
+        "[Speaker notes in a new window](notes)"
+    )  # markdown links open in a new tab
     # A new step should open at its top. The snippet sits here, at a position that doesn't depend on
     # the step's body, and carries the step number: the element only changes when the step does, so a
     # rerun on the same step ("Ask Jev", a sidebar toggle) leaves the scroll alone.

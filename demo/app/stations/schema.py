@@ -19,11 +19,11 @@ left, chart = st.columns([1, 2], gap="large")
 with left:
     c1, c2 = st.columns(2)
     c1.metric(
-        "Pre-filled",
+        "Accept",
         int((table["decision"] == "accept").sum()),
         help=f"of {len(table)} source columns",
     )
-    c2.metric("To the consultant", int((table["decision"] == "review").sum()))
+    c2.metric("Review", int((table["decision"] == "review").sum()))
     c1.metric("Top-1 accuracy", ui.percent(scores["top1_accuracy"]))
     c2.metric(
         "None right",
@@ -48,11 +48,10 @@ with chart:
         ["source_col", "target_col", "gold", "p", "reason"],
         height=180,
         x_title="Jev's confidence in the column it picked",
-        names=results.SCHEMA_NAMES,
     )
     st.caption(
-        f"One dot per source column. Right of {schema.CONFIDENT:.2f} the mapping is pre-filled, "
-        "unless another column claims the same target; the rest goes to the consultant."
+        f"One dot per source column. Right of {schema.CONFIDENT:.2f} accept, "
+        "unless another column claims the same target; the rest goes to review."
     )
 
 
@@ -101,13 +100,13 @@ with mapping:
     st.dataframe(table, hide_index=True, column_config={"p": ui.P_COLUMN})
 with wrong:
     st.caption(
-        "A wrong answer in review costs the consultant a minute. A wrong answer that was pre-filled is the expensive kind."
+        "A wrong answer in review costs a minute. A wrong answer that was accepted is the expensive kind."
     )
     st.dataframe(
         table[~table["correct"]], hide_index=True, column_config={"p": ui.P_COLUMN}
     )
 with yml:
-    st.caption("Only pre-filled mappings; the review rows go to the consultant's list.")
+    st.caption("Only accepted mappings; review rows are left out.")
     st.code(
         schema.sources_yml(decided, source_name="legacy_crm"),
         language=None,

@@ -59,11 +59,10 @@ with chart:
         [lo, hi],
         ["value", "p_pass", "code", "decision"],
         x_title="Jev's confidence that the value passes",
-        names=results.DQ_NAMES,
     )
     st.caption(
-        f"One dot per distinct value. Left of {lo:.2f} it fails, right of {hi:.2f} it passes; "
-        "in between, a person decides."
+        f"One dot per distinct value. Left of {lo:.2f} reject, right of {hi:.2f} accept; "
+        "in between, review."
     )
 
 
@@ -109,7 +108,7 @@ with quarantine:
     )
 with review:
     st.caption(
-        "Jev wasn't sure: a person decides instead of silently passing or quarantining."
+        "Jev wasn't sure: review instead of a silent accept or reject."
     )
     st.dataframe(
         decided[decided["decision"] == "review"].drop_duplicates(["check_id", "value"])[
@@ -145,7 +144,7 @@ with labels:
     code_ok = sum(
         c == by_id[r]["cancel_code"] for c, r in zip(mapped["code"], mapped["row_id"])
     )
-    st.caption("Only auto-decided rows count; review rows go to a person.")
+    st.caption("Only auto-decided rows count; review rows don't count.")
     st.dataframe(
         auto.groupby("check_id")["correct"]
         .agg(["sum", "count"])
