@@ -12,10 +12,13 @@ DOC = Path(__file__).resolve().parent.parent / "docs" / "lessons-learned.md"
 finding = ui.header("Lessons learned: question wording", "05_lessons.ipynb")
 judge = ui.judge(ui.mode())
 
-finding.markdown(
-    "**Clearer wording helped; splitting the cancel Choice didn't.** Schema mapping "
-    "pre-fills one more column right and none wrong, and the address check leaves fewer rows "
-    "for review. The split did worse, so it was not adopted."
+ui.claim(
+    finding,
+    ui.Claim(
+        "Clearer wording helped; splitting the cancel-reason question in two didn't.",
+        "Schema mapping pre-fills one more column right and none wrong, and the address check "
+        "leaves fewer rows for review. The split did worse, so it was not adopted.",
+    ),
 )
 
 st.subheader("Schema mapping: where each column landed")
@@ -31,6 +34,8 @@ st.caption(
     "a better wording pushes them out to the edges."
 )
 st.altair_chart(lessons.margin_strips(lessons.dq_margins(judge)), width="content")
+
+ui.end_of_presenter_view()
 
 # The doc's own title would repeat the page title.
 st.markdown(DOC.read_text().split("\n", 1)[1])

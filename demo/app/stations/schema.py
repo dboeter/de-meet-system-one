@@ -1,4 +1,5 @@
 import pandas as pd
+import results
 import streamlit as st
 
 import ui
@@ -7,78 +8,85 @@ from jevdemo.judge import LiveUnavailable, NotRecorded
 
 finding = ui.header("Schema mapping for a migration", "03_schema.ipynb")
 
-sources, targets, gold = (
-    schema.load_sources(),
-    schema.load_targets(),
-    schema.load_gold(),
-)
-shortlists = {s["source_col"]: schema.shortlist(s, targets) for s in sources}
-
-
-@st.cache_data(show_spinner="Asking Jev…")
-def map_columns(mode: str) -> list[dict]:
-    answers = ui.judge(mode).ask_many(
-        [schema.mapping_request(s, targets) for s in sources]
-    )
-    return [
-        {**schema.to_mapping(s, a.response), "shortlist": shortlists[s["source_col"]]}
-        for s, a in zip(sources, answers, strict=True)
-    ]
-
-
-decided = schema.decide(map_columns(ui.mode()))
+sources, targets, gold = results.SOURCES, results.TARGETS, results.SCHEMA_GOLD
+shortlists = results.SHORTLISTS
+decided = results.schema_mappings(ui.mode())
 scores = schema.evaluate(decided, gold)
-table = pd.DataFrame(decided)[["source_col", "target_col", "p", "decision", "reason"]]
-table["gold"] = table["source_col"].map(gold)
-table["correct"] = table["target_col"] == table["gold"]
-wrong_prefilled = table[~table["correct"] & (table["decision"] == "accept")]
+table = results.schema_table(decided)
+ui.claim(finding, results.schema_claim(table, scores))
 
-finding.markdown(
-    f"**{ui.percent(scores['prefilled_correct'])} of columns pre-filled correctly, "
-    f"{ui.percent(scores['top1_accuracy'])} top-1; the target was 70%.** "
-    + (
-        f"{len(wrong_prefilled)} wrong mapping pre-filled: "
-        + ", ".join(
-            f"{r.source_col} → {r.target_col} at {r.p:.2f}"
-            for r in wrong_prefilled.itertuples()
+if ui.presenting():
+    chart = st.container()
+else:
+    left, chart = st.columns([1, 2], gap="large")
+    with left:
+        c1, c2 = st.columns(2)
+        c1.metric(
+            "Pre-filled",
+            int((table["decision"] == "accept").sum()),
+            help=f"of {len(table)} source columns",
         )
-        + ". This is why a person approves the file."
-        if len(wrong_prefilled)
-        else "No wrong mapping was pre-filled."
-    )
-)
-
-left, right = st.columns([1, 2], gap="large")
-with left:
-    c1, c2 = st.columns(2)
-    c1.metric(
-        "Pre-filled",
-        int((table["decision"] == "accept").sum()),
-        help=f"of {len(table)} source columns",
-    )
-    c2.metric("To the consultant", int((table["decision"] == "review").sum()))
-    c1.metric("Top-1 accuracy", ui.percent(scores["top1_accuracy"]))
-    c2.metric(
-        "None right",
-        ui.percent(scores["none_accuracy"]),
-        help="Columns with no target equivalent",
-    )
-    st.caption(
-        f"Pre-filled when p ≥ {schema.CONFIDENT:.2f} and no other column claims the same 1:1 target. "
-        f"Shortlists hold {min(map(len, shortlists.values()))}–{max(map(len, shortlists.values()))} options; "
-        f"shortlist recall {ui.percent(scores['shortlist_recall'])} by construction."
-    )
-with right:
+        c2.metric("To the consultant", int((table["decision"] == "review").sum()))
+        c1.metric("Top-1 accuracy", ui.percent(scores["top1_accuracy"]))
+        c2.metric(
+            "None right",
+            ui.percent(scores["none_accuracy"]),
+            help="Columns with no target equivalent",
+        )
+        st.caption(
+            f"Pre-filled when p ≥ {schema.CONFIDENT:.2f} and no other column claims the same 1:1 target. "
+            f"Shortlists hold {min(map(len, shortlists.values()))}–{max(map(len, shortlists.values()))} options; "
+            f"shortlist recall {ui.percent(scores['shortlist_recall'])} by construction."
+        )
+with chart:
     ui.strip(
         table.assign(
-            outcome=lambda t: t["correct"].map({True: "correct", False: "wrong"})
+            outcome=lambda t: t["correct"].map(
+                {True: "Right column", False: "Wrong column"}
+            )
         ),
         "p",
         "outcome",
         [schema.CONFIDENT],
         ["source_col", "target_col", "gold", "p", "reason"],
         height=180,
+        x_title="Jev's confidence in the column it picked",
+        names={"accept": "pre-filled", "review": "to the consultant"},
     )
+    st.caption(
+        f"One dot per source column. Right of {schema.CONFIDENT:.2f} the mapping is pre-filled, "
+        "unless another column claims the same target; the rest goes to the consultant."
+    )
+
+st.subheader("Your turn")
+preset = schema.LIVE_PRESET
+with st.form("live"):
+    c1, c2 = st.columns(2)
+    name = c1.text_input(
+        "Column (TABLE.COLUMN, table KLANT or ORDER)", preset["source_col"]
+    )
+    kind = c2.text_input("Type", preset["type"])
+    comment = c1.text_input("Comment", preset["comment"])
+    samples = c2.text_input(
+        "Sample values, separated by |", "|".join(preset["samples"])
+    )
+    asked = st.form_submit_button("Ask Jev", type="primary")
+if asked:
+    column = {
+        "source_col": name,
+        "type": kind,
+        "comment": comment,
+        "samples": samples.split("|"),
+    }
+    try:
+        answer = ui.judge(ui.mode()).ask(*schema.mapping_request(column, targets))
+        m = schema.to_mapping(column, answer.response)
+        st.metric(f"{m['source_col']} →", m["target_col"])
+        st.caption(f"p = {m['p']:.2f} · {ui.answer_caption(answer)}")
+    except (NotRecorded, LiveUnavailable, KeyError) as e:
+        st.warning(f"Unknown source table: {e}" if isinstance(e, KeyError) else str(e))
+
+ui.end_of_presenter_view()
 
 mapping, wrong, yml, tried, data = st.tabs(
     [
@@ -122,31 +130,3 @@ with data:
 
 example = next(s for s in sources if s["source_col"] == "KLANT.KLT_NM_VOL")
 ui.request_view(*schema.mapping_request(example, targets))
-
-st.subheader("Your turn")
-preset = schema.LIVE_PRESET
-with st.form("live"):
-    c1, c2 = st.columns(2)
-    name = c1.text_input(
-        "Column (TABLE.COLUMN, table KLANT or ORDER)", preset["source_col"]
-    )
-    kind = c2.text_input("Type", preset["type"])
-    comment = c1.text_input("Comment", preset["comment"])
-    samples = c2.text_input(
-        "Sample values, separated by |", "|".join(preset["samples"])
-    )
-    asked = st.form_submit_button("Ask Jev", type="primary")
-if asked:
-    column = {
-        "source_col": name,
-        "type": kind,
-        "comment": comment,
-        "samples": samples.split("|"),
-    }
-    try:
-        answer = ui.judge(ui.mode()).ask(*schema.mapping_request(column, targets))
-        m = schema.to_mapping(column, answer.response)
-        st.metric(f"{m['source_col']} →", m["target_col"])
-        st.caption(f"p = {m['p']:.2f} · {ui.answer_caption(answer)}")
-    except (NotRecorded, LiveUnavailable, KeyError) as e:
-        st.warning(f"Unknown source table: {e}" if isinstance(e, KeyError) else str(e))

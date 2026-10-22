@@ -1,4 +1,4 @@
-"""The Streamlit app renders every station from recordings, with no key."""
+"""The Streamlit app renders every page from recordings, with no key, in presenter view and with every detail."""
 
 from pathlib import Path
 
@@ -14,22 +14,34 @@ PAGES = [
 ]
 
 
+@pytest.mark.parametrize("presenting", [True, False])
 @pytest.mark.parametrize("page", PAGES)
-def test_page_renders_from_recordings(page, monkeypatch):
+def test_page_renders_from_recordings(page, presenting, monkeypatch):
     monkeypatch.delenv("JEV_MODE", raising=False)
     at = AppTest.from_file(str(APP), default_timeout=60)
     at.run()
+    at.toggle(key="presenting").set_value(presenting).run()
     at.switch_page(page).run()
     assert not at.exception
     assert at.title[0].value
+    assert bool(at.tabs) != presenting  # the tables are detail
     at.button[0].click().run()  # the preset in "Your turn" is recorded
     assert not at.exception
     assert not at.warning
 
 
+def test_overview_links_every_station():
+    at = AppTest.from_file(str(APP), default_timeout=60)
+    at.run()
+    assert not at.exception
+    assert at.title[0].value == "Code for the clear cases, Jev for the rest"
+    assert len(at.get("page_link")) == len(PAGES)
+
+
 def test_lessons_page_renders_the_doc():
     at = AppTest.from_file(str(APP), default_timeout=60)
     at.run()
+    at.toggle(key="presenting").set_value(False).run()
     at.switch_page("lessons.py").run()
     assert not at.exception
     assert at.title[0].value == "Lessons learned: question wording"

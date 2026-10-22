@@ -14,7 +14,9 @@ into accept, review or reject. All data is synthetic.
 The same stations come in two forms, so you can compare them:
 
 - **Notebooks** (`notebooks/01_dq.ipynb` … `04_pii.ipynb`): the step-by-step story with the code visible. `05_lessons.ipynb` recomputes the question-wording experiments.
-- **Streamlit app** (`app/`): one page per station, with threshold sliders and a form for live input.
+- **Streamlit app** (`app/`): an overview, then one page per station. Presenter view (on by default, in
+  the sidebar) shows each station's result, one chart and a form for live input; switch it off for the
+  threshold sliders, tables and the requests Jev receives.
 
 Both use the `jevdemo` package and `recordings.jsonl`, so they show the same numbers.
 

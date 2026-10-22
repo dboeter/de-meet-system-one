@@ -1,4 +1,5 @@
 import pandas as pd
+import results
 import streamlit as st
 
 import ui
@@ -7,71 +8,83 @@ from jevdemo.judge import LiveUnavailable, NotRecorded
 
 finding = ui.header("Semantic data-quality checks", "01_dq.ipynb")
 
-rows, checks = dq.load_rows(), dq.load_checks()
+rows, checks = results.ROWS, results.CHECKS
+judgments, first, rerun = results.dq_judgments(ui.mode())
 
-
-@st.cache_data(show_spinner="Asking Jev…")
-def judge_all(mode: str):
-    # Two passes over one cache: the second is tomorrow's run, with nothing new to ask.
-    cache = dq.Cache()
-    judgments, first = dq.judge_checks(rows, checks, ui.judge(mode), cache)
-    _, rerun = dq.judge_checks(rows, checks, ui.judge(mode), cache)
-    return judgments, first, rerun
-
-
-judgments, first, rerun = judge_all(ui.mode())
-
-left, right = st.columns([1, 2], gap="large")
-with left:
-    lo, hi = st.slider(
-        "Thresholds on p_pass (reject ≤ lo, accept ≥ hi)",
-        0.0,
-        1.0,
-        (pipeline.LO, pipeline.HI),
-        0.01,
-        help="Recomputed locally: moving these makes no API calls.",
-    )
+if ui.presenting():
+    lo, hi, chart = pipeline.LO, pipeline.HI, st.container()
+else:
+    left, chart = st.columns([1, 2], gap="large")
+    with left:
+        lo, hi = st.slider(
+            "Thresholds on p_pass (reject ≤ lo, accept ≥ hi)",
+            0.0,
+            1.0,
+            (pipeline.LO, pipeline.HI),
+            0.01,
+            help="Recomputed locally: moving these makes no API calls.",
+        )
 result = dq.run(rows, checks, judgments, lo=lo, hi=hi)
 manifest = result.manifest
 decided = pd.DataFrame(result.rows)
+ui.claim(finding, results.dq_claim(result, first, rerun))
 
-triggered = [(cid, c) for cid, c in manifest["checks"].items() if c["triggered"]]
-triggered_text = "; ".join(
-    f"{cid} rejects {ui.percent(c['fail_rate'])} of rows, over its "
-    f"{ui.percent(c['max_fail_rate'])} limit → {c['action']}"
-    for cid, c in triggered
-)
-finding.markdown(
-    f"**Run {manifest['status'].upper()}.** {triggered_text or 'No check crossed its limit.'}"
-)
-
-with left:
-    a, b = st.columns(2)
-    a.metric("Run status", manifest["status"].upper())
-    b.metric("Quarantined", len(result.quarantine), help="Rows held out of gold")
-    a.metric(
-        "Jev calls",
-        first.asked,
-        help=f"{len(rows)} rows × {len(checks)} checks = {len(rows) * len(checks)} cells, asked once per distinct value",
+if not ui.presenting():
+    with left:
+        a, b = st.columns(2)
+        a.metric("Run status", manifest["status"].upper())
+        b.metric(
+            "Quarantined",
+            len({r["row_id"] for r in result.quarantine}),
+            help="Rows held out of gold",
+        )
+        a.metric(
+            "Jev calls",
+            first.asked,
+            help=f"{len(rows)} rows × {len(checks)} checks = {len(rows) * len(checks)} cells, asked once per distinct value",
+        )
+        b.metric(
+            "Review queue",
+            int((decided["decision"] == "review").sum()),
+            help="(row, check) cells",
+        )
+        st.caption(
+            f"Rerun with the same values: asked {rerun.asked}, from cache {rerun.cached} "
+            f"(hit rate {ui.percent(rerun.hit_rate)})."
+        )
+with chart:
+    distinct = decided.drop_duplicates(["check_id", "value"]).assign(
+        check=lambda t: t["check_id"].map(results.check_label)
     )
-    b.metric(
-        "Review queue",
-        int((decided["decision"] == "review").sum()),
-        help="(row, check) cells",
-    )
-    st.caption(
-        f"Rerun with the same values: asked {rerun.asked}, from cache {rerun.cached} "
-        f"(hit rate {ui.percent(rerun.hit_rate)})."
-    )
-with right:
-    distinct = decided.drop_duplicates(["check_id", "value"])
     ui.strip(
         distinct,
         "p_pass",
-        "check_id",
+        "check",
         [lo, hi],
         ["value", "p_pass", "code", "decision"],
+        x_title="Jev's confidence that the value passes",
+        names={"accept": "passes", "review": "to a person", "reject": "fails"},
     )
+    st.caption(
+        f"One dot per distinct value. Left of {lo:.2f} it fails, right of {hi:.2f} it passes; "
+        "in between, a person decides."
+    )
+
+st.subheader("Your turn")
+address = dq.address_check(checks)
+with st.form("live"):
+    value = st.text_input("An address value", dq.LIVE_PRESET)
+    asked = st.form_submit_button("Ask Jev", type="primary")
+if asked:
+    try:
+        answer = ui.judge(ui.mode()).ask(*dq.check_request(address, value))
+        p = dq.to_judgment(address, value, answer.response).p_pass
+        st.metric(f"p_pass → {pipeline.bucket(p, lo, hi)}", f"{p:.2f}")
+        st.caption(ui.answer_caption(answer))
+    except (NotRecorded, LiveUnavailable) as e:
+        st.warning(str(e))
+
+ui.end_of_presenter_view()
 
 st.subheader("Run manifest")
 st.dataframe(
@@ -153,17 +166,3 @@ ui.request_view(
     *dq.check_request(checks[2], rows[0][checks[2].column]),
     label="What Jev receives: a Choice",
 )
-
-st.subheader("Your turn")
-address = dq.address_check(checks)
-with st.form("live"):
-    value = st.text_input("An address value", dq.LIVE_PRESET)
-    asked = st.form_submit_button("Ask Jev", type="primary")
-if asked:
-    try:
-        answer = ui.judge(ui.mode()).ask(*dq.check_request(address, value))
-        p = dq.to_judgment(address, value, answer.response).p_pass
-        st.metric(f"p_pass → {pipeline.bucket(p, lo, hi)}", f"{p:.2f}")
-        st.caption(ui.answer_caption(answer))
-    except (NotRecorded, LiveUnavailable) as e:
-        st.warning(str(e))

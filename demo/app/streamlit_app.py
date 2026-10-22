@@ -11,6 +11,7 @@ st.logo(str(Path(__file__).parent / "static" / "mark.svg"), size="large")
 
 page = st.navigation(
     {
+        "": [st.Page("overview.py", title="Overview", default=True)],
         "Stations": [
             st.Page("stations/dq.py", title="Data quality"),
             st.Page("stations/er.py", title="Entity resolution"),
