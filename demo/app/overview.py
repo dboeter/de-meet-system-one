@@ -18,7 +18,7 @@ st.html(
 )
 
 mode = ui.mode()
-judgments, first, rerun = results.dq_judgments(mode)
+judgments, _, _ = results.dq_judgments(mode)
 scores = {
     "Levenshtein": er.evaluate(results.er_baseline(), results.ER_GOLD),
     "Jev": er.evaluate(
@@ -37,9 +37,7 @@ STATIONS = [
         "Data quality",
         "Does this value pass the check?",
         results.dq_claim(
-            dq.run(results.ROWS, results.CHECKS, judgments, pipeline.LO, pipeline.HI),
-            first,
-            rerun,
+            dq.run(results.ROWS, results.CHECKS, judgments, pipeline.LO, pipeline.HI)
         ),
     ),
     (
@@ -70,7 +68,7 @@ def card(page, name, question, claim):
         with left:
             st.page_link(page, label=name, icon=":material/arrow_forward:")
             st.caption(question)
-        right.html(f'<p class="station-claim">{html.escape(claim.headline)}</p>')
+        right.html(f'<p class="station-claim">{html.escape(claim)}</p>')
 
 
 st.subheader("Stations")

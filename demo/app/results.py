@@ -6,33 +6,32 @@ import streamlit as st
 import ui
 from jevdemo import dq, er, pii, schema
 from jevdemo.pipeline import bucket
-from ui import Claim
 
-# The README's station table.
+# The station table on the guided walkthrough's second step.
 STATIONS = pd.DataFrame(
     [
         (
-            "Semantic data quality",
-            "YAML checks, distinct values, cache",
+            "Data quality",
+            "Asks once per distinct value and remembers the answer",
             "Does this value pass the check? Which cancel code is this?",
         ),
         (
             "Entity resolution",
-            "Normalize, block, exact KvK/IBAN rule",
+            "Pairs up likely candidates, merges on a matching KvK or IBAN",
             "Are these two suppliers the same organisation?",
         ),
         (
             "Schema mapping",
-            "Shortlist targets by table and type",
+            "Shortlists target columns by table and type",
             "Which target column holds this source column's data?",
         ),
         (
             "PII screening",
-            "Regex with checksums (BSN, IBAN, phone, email)",
-            "Does this note name a person, or reveal health, finances, an address or Art. 9 data?",
+            "Finds BSN, IBAN, phone numbers and email with regex",
+            "Does this note name a person, or reveal health, finances, an address or other sensitive data?",
         ),
     ],
-    columns=["Station", "Code step", "Jev's question"],
+    columns=["Station", "What code does first", "What Jev is asked"],
 ).set_index("Station")
 
 # --- Data quality ---
@@ -59,7 +58,7 @@ def dq_judgments(mode: str):
     return judgments, first, rerun
 
 
-def dq_claim(result, first, rerun) -> Claim:
+def dq_claim(result) -> str:
     checks = result.manifest["checks"]
     # The check that decides the run's status: fail_run before quarantine before warn.
     severity = {"fail_run": 0, "quarantine": 1, "warn": 2}
@@ -80,14 +79,7 @@ def dq_claim(result, first, rerun) -> Claim:
         )
     else:
         headline = f"{verdict}: every check stays under its limit."
-    review = sum(r["decision"] == "review" for r in result.rows)
-    held = len({r["row_id"] for r in result.quarantine})
-    return Claim(
-        headline,
-        f"{held} rows stay out of gold and {review} answers go to review. "
-        f"{len(ROWS) * len(CHECKS)} row checks took {first.asked} questions to Jev; "
-        f"a rerun on the same values takes {rerun.asked}.",
-    )
+    return headline
 
 
 # --- Entity resolution ---
@@ -136,19 +128,16 @@ def er_baseline() -> dict[tuple[str, str], str]:
     }
 
 
-def er_claim(scores: dict) -> Claim:
+def er_claim(scores: dict) -> str:
     def found(s):
         right = round(s["recall"] * len(ER_GOLD))
         return right, s["merged"] - right
 
-    (jr, jw), (fr, fw) = found(scores["Jev"]), found(scores["Levenshtein"])
+    (jr, jw), (fr, _) = found(scores["Jev"]), found(scores["Levenshtein"])
     wrong = "no wrong merge" if not jw else f"{jw} wrong merge{'s' * (jw > 1)}"
-    return Claim(
+    return (
         f"Jev finds {jr} of {len(ER_GOLD)} duplicate suppliers, with {wrong}. "
-        f"Name matching finds {fr}.",
-        f"{scores['Jev']['review']} pairs go to review. Name matching (Levenshtein) "
-        f"merges {scores['Levenshtein']['merged']}, {fw} of them wrong, and sends "
-        f"{scores['Levenshtein']['review']} to review.",
+        f"Name matching finds {fr}."
     )
 
 
@@ -187,17 +176,14 @@ def schema_table(decided: list[dict]) -> pd.DataFrame:
     return table
 
 
-def schema_claim(table: pd.DataFrame) -> Claim:
+def schema_claim(table: pd.DataFrame) -> str:
     prefilled = table["decision"] == "accept"
     right, wrong = (
         int((prefilled & table["correct"]).sum()),
         int((prefilled & ~table["correct"]).sum()),
     )
-    review = table[~prefilled]
-    return Claim(
-        f"Jev pre-fills {right + wrong} of {len(table)} column mappings, "
-        + ("none of them wrong." if not wrong else f"{wrong} of them wrong."),
-        f"The other {len(review)} go to review with Jev's suggestion, which is right for {int(review['correct'].sum())}.",
+    return f"Jev pre-fills {right + wrong} of {len(table)} column mappings, " + (
+        "none of them wrong." if not wrong else f"{wrong} of them wrong."
     )
 
 
@@ -247,24 +233,18 @@ def pii_routed(probs) -> pd.DataFrame:
     )
 
 
-def pii_claim(routed: pd.DataFrame) -> Claim:
+def pii_claim(routed: pd.DataFrame) -> str:
     contextual = [n for n in NOTES if any(n[c] for c in pii.CATEGORIES)]
     route = routed.set_index("id")["route"]
     by_regex = sum(bool(HITS[n["id"]]) for n in contextual)
     by_jev = sum(route[n["id"]] != "clear" for n in contextual)
-    routes = routed["route"].value_counts()
-    return Claim(
+    return (
         f"Regex finds {by_regex} of the {len(contextual)} notes with personal details in plain words. "
-        f"With Jev: {by_jev}.",
-        f"{routes.get('excluded', 0)} notes mention health or other sensitive data and stay out of gold. "
-        f"{routes.get('restricted', 0)} more are restricted; regex masks the numbers in "
-        f"{routes.get('masked', 0)}.",
+        f"With Jev: {by_jev}."
     )
 
 
 # Written, not computed: notebooks/05_lessons.ipynb recomputes the runs behind it.
-LESSONS_CLAIM = Claim(
-    "Clearer wording helped; splitting the cancel-reason question in two didn't.",
-    "Schema mapping pre-fills one more column right and none wrong, and the address check "
-    "leaves fewer rows for review. The split did worse, so it was not adopted.",
+LESSONS_CLAIM = (
+    "Clearer wording helped; splitting the cancel-reason question in two didn't."
 )

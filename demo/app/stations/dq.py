@@ -9,7 +9,7 @@ from jevdemo.judge import LiveUnavailable, NotRecorded
 finding = ui.header("Semantic data-quality checks")
 
 rows, checks = results.ROWS, results.CHECKS
-judgments, first, rerun = results.dq_judgments(ui.mode())
+judgments, first, _ = results.dq_judgments(ui.mode())
 
 left, chart = st.columns([1, 2], gap="large")
 with left:
@@ -24,7 +24,7 @@ with left:
 result = dq.run(rows, checks, judgments, lo=lo, hi=hi)
 manifest = result.manifest
 decided = pd.DataFrame(result.rows)
-ui.claim(finding, results.dq_claim(result, first, rerun))
+ui.claim(finding, results.dq_claim(result))
 
 with left:
     a, b = st.columns(2)
@@ -43,10 +43,6 @@ with left:
         "Review queue",
         int((decided["decision"] == "review").sum()),
         help="(row, check) cells",
-    )
-    st.caption(
-        f"Rerun with the same values: asked {rerun.asked}, from cache {rerun.cached} "
-        f"(hit rate {ui.percent(rerun.hit_rate)})."
     )
 with chart:
     distinct = decided.drop_duplicates(["check_id", "value"]).assign(

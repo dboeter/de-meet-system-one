@@ -2,7 +2,6 @@
 
 import json
 import os
-from dataclasses import dataclass
 
 import altair as alt
 import pandas as pd
@@ -13,14 +12,6 @@ from jevdemo.judge import ENV_FILE, Judge, request_body
 
 BUCKET_COLOURS = {"accept": "#2e7d32", "review": "#b45309", "reject": "#c4242a"}
 DATA_HUE = "#1d5fbf"
-
-
-@dataclass
-class Claim:
-    """A station's result: one sentence that leads, and the line that backs it up."""
-
-    headline: str
-    support: str
 
 
 def has_key() -> bool:
@@ -93,9 +84,9 @@ def header(title: str):
     return st.empty()
 
 
-def claim(slot, c):
-    """The station's result: one bold line over its support."""
-    slot.markdown(f"**{c.headline}** {c.support}")
+def claim(slot, headline: str):
+    """The station's result in one sentence; the chart and numbers under it carry the rest."""
+    slot.markdown(f"**{headline}**")
 
 
 def strip(
@@ -109,18 +100,24 @@ def strip(
     x_title: str = "Probability of yes",
     title: str = "",
     subtitle: str = "",
+    jitter: bool = True,
 ):
     """Every judged value as a dot on 0..1, one lane per `y`, with the thresholds as rules.
 
     `title` is the question the dots answer; it sits above the chart, where it is read first.
+    `jitter=False` is for one dot per lane: the lanes are then sorted by value, highest on top,
+    and the chart grows a row per lane (`height` counts title, legend and axis too).
     """
+    if not jitter:
+        height = 130 + 22 * df[y].nunique()
     base = alt.Chart(df).transform_calculate(jitter="random()")
     encode = {
         "x": alt.X(f"{x}:Q", scale=alt.Scale(domain=[0, 1]), title=x_title),
-        "y": alt.Y(f"{y}:N", title=None),
-        "yOffset": alt.YOffset("jitter:Q"),
+        "y": alt.Y(f"{y}:N", title=None, sort=None if jitter else "-x"),
         "tooltip": tooltip,
     }
+    if jitter:
+        encode["yOffset"] = alt.YOffset("jitter:Q")
     if colour:
         present = [
             b for b in BUCKET_COLOURS if b in set(df[colour])
@@ -168,7 +165,7 @@ def strip(
             titleColor="#3d3d3d",
             labelFontSize=font,
             titleFontSize=font,
-            labelLimit=220,
+            labelLimit=420,
         )
         .configure_legend(labelColor="#3d3d3d", labelFontSize=font)
     )

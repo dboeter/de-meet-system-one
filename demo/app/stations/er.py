@@ -14,7 +14,8 @@ pairs, exact, ambiguous = results.PAIRS, results.EXACT, results.AMBIGUOUS
 names = {r["id"]: r["name"] for r in a + b}
 p_same = results.er_p_same(ui.mode())
 
-left, chart = st.columns([1, 2], gap="large")
+# The chart gets the full width below: its lanes are labelled with both supplier names.
+left, right = st.columns([1, 2], gap="large")
 with left:
     lo, hi = st.slider(
         "Thresholds (reject below, accept above)",
@@ -37,32 +38,27 @@ scores = {"Levenshtein": er.evaluate(fuzzy, gold), "Jev": er.evaluate(jev, gold)
 j = scores["Jev"]
 ui.claim(finding, results.er_claim(scores))
 
-with left:
-    c1, c2 = st.columns(2)
+with right:
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric(
         "Candidate pairs",
         len(pairs),
         help=f"of {len(a)} × {len(b)} = {len(a) * len(b)} possible",
     )
     c2.metric("Settled by exact rule", len(exact), help="Same KvK or IBAN")
-    c1.metric("Judged by Jev", len(ambiguous))
-    c2.metric("Review queue", j["review"])
-    seen = {(ra["id"], rb["id"]) for ra, rb in pairs}
-    st.caption(
-        f"Blocking recall: {len(seen & gold)} of {len(gold)} gold pairs reach a candidate. "
-        "Jev can't match a pair it never sees."
-    )
-with chart:
+    c3.metric("Judged by Jev", len(ambiguous))
+    c4.metric("Review queue", j["review"])
+with st.container():
     jev_rows = table[table["by"] == "Jev"].assign(
-        lane="Supplier pairs", pair=lambda t: t["name_a"] + " | " + t["name_b"]
+        pair=lambda t: t["name_a"] + " | " + t["name_b"]
     )
     ui.strip(
         jev_rows,
         "p_same",
-        "lane",
+        "pair",
         [lo, hi],
         ["pair", "p_same", "decision", "gold"],
-        height=160,
+        jitter=False,
         title="Are both records the same supplier?",
         subtitle=(
             f"One dot per pair that no exact KvK or IBAN rule settled. Left of {lo:.2f} the records "

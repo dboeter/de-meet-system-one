@@ -9,7 +9,6 @@ from jevdemo.judge import LiveUnavailable, NotRecorded
 finding = ui.header("Schema mapping for a migration")
 
 sources, targets, gold = results.SOURCES, results.TARGETS, results.SCHEMA_GOLD
-shortlists = results.SHORTLISTS
 decided = results.schema_mappings(ui.mode())
 scores = schema.evaluate(decided, gold)
 table = results.schema_table(decided)
@@ -30,11 +29,6 @@ with left:
         ui.percent(scores["none_accuracy"]),
         help="Columns with no target equivalent",
     )
-    st.caption(
-        f"Pre-filled when p ≥ {schema.CONFIDENT:.2f} and no other column claims the same 1:1 target. "
-        f"Shortlists hold {min(map(len, shortlists.values()))}–{max(map(len, shortlists.values()))} options; "
-        f"shortlist recall {ui.percent(scores['shortlist_recall'])} by construction."
-    )
 with chart:
     ui.strip(
         table.assign(
@@ -46,12 +40,11 @@ with chart:
         "outcome",
         [schema.CONFIDENT],
         ["source_col", "target_col", "gold", "p", "reason"],
-        height=180,
         x_title="Probability",
         title="How sure was Jev of the column it picked?",
         subtitle=(
             f"One dot per source column. Right of {schema.CONFIDENT:.2f} accept, "
-            "unless another column claims the same target; the rest goes to review."
+            "unless another column took the target."
         ),
     )
 

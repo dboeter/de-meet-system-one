@@ -21,10 +21,6 @@ with left:
         [c1, c2, c1, c2], ["excluded", "restricted", "masked", "clear"], strict=True
     ):
         col.metric(name.capitalize(), int(routes.get(name, 0)))
-    st.caption(
-        f"{len(notes)} notes: regex with checksums settled {len(notes) - len(rest)}, Jev screened {len(rest)}. "
-        f"A category counts at p ≥ {pii.THRESHOLD:.2f}, low on purpose: a missed flag costs more than a review."
-    )
 with chart:
     long = pd.DataFrame(
         [

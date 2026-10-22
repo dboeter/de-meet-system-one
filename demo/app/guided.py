@@ -308,7 +308,7 @@ def er_rows(ra: dict, rb: dict, p_same: float, heading: bool = True) -> str:
             outcome=landing(pipeline.bucket(p_same, er.LO, er.HI)),
         ),
     ) + verdict(
-        before=f"Our label: {'same organisation' if same else 'different organisations'}"
+        before=f"Correct answer: {'same organisation' if same else 'different organisations'}"
     )
 
 
@@ -498,8 +498,7 @@ def dq_choice():
 def dq_scale():
     judgments, first, rerun = results.dq_judgments(ui.mode())
     result = dq.run(results.ROWS, results.CHECKS, judgments, pipeline.LO, pipeline.HI)
-    c = results.dq_claim(result, first, rerun)
-    lead(c.headline)
+    lead(results.dq_claim(result))
     figures(
         ("Row checks", len(results.ROWS) * len(results.CHECKS), ""),
         ("Questions to Jev", first.asked, ""),
@@ -575,8 +574,7 @@ def er_scale():
         "Levenshtein": er.evaluate(results.er_baseline(), results.ER_GOLD),
         "Jev": er.evaluate(jev, results.ER_GOLD),
     }
-    c = results.er_claim(scores)
-    lead(c.headline)
+    lead(results.er_claim(scores))
     figures(
         ("Possible pairs", len(results.ER_A) * len(results.ER_B), ""),
         ("After blocking", len(results.PAIRS), ""),
@@ -590,16 +588,15 @@ def er_scale():
         (x, y) in results.ER_GOLD for x, y in zip(table["id_a"], table["id_b"])
     ]
     jev_rows = table[table["by"] == "Jev"].assign(
-        lane="Supplier pairs",
         pair=lambda t: t["id_a"].map(names) + " | " + t["id_b"].map(names),
     )
     ui.strip(
         jev_rows,
         "p_same",
-        "lane",
+        "pair",
         [er.LO, er.HI],
         ["pair", "p_same", "decision", "gold"],
-        height=160,
+        jitter=False,
         title="Are both records the same supplier?",
         subtitle=(
             f"One dot per pair that no exact KvK or IBAN rule settled. Left of {er.LO:.2f} reject, "
@@ -640,8 +637,7 @@ def schema_example():
 def schema_scale():
     decided = results.schema_mappings(ui.mode())
     table = results.schema_table(decided)
-    c = results.schema_claim(table)
-    lead(c.headline)
+    lead(results.schema_claim(table))
     accepted = table["decision"] == "accept"
     figures(
         ("Accepted", int(accepted.sum()), ""),
@@ -709,8 +705,7 @@ def pii_example():
 
 def pii_scale():
     routed = results.pii_routed(results.pii_probs(ui.mode()))
-    c = results.pii_claim(routed)
-    lead(c.headline)
+    lead(results.pii_claim(routed))
     counts = routed["route"].value_counts()
     figures(
         *(
