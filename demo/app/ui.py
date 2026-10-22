@@ -9,7 +9,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
-from jevdemo.judge import ENV_FILE, MODEL, RECORDINGS, Judge, request_body
+from jevdemo.judge import ENV_FILE, Judge, request_body
 
 BUCKET_COLOURS = {"accept": "#2e7d32", "review": "#b45309", "reject": "#c4242a"}
 DATA_HUE = "#1d5fbf"
@@ -52,11 +52,8 @@ def sidebar():
             disabled=not key,
             help="Off: replay recorded answers. On: call TypeSafe for every request.",
         )
-        recorded = sum(1 for line in RECORDINGS.open() if line.strip())
-        st.caption(
-            f"Model {MODEL} · {recorded} recorded answers"
-            + ("" if key else " · no TYPESAFE_API_KEY in demo/.env, live is off")
-        )
+        if not key:
+            st.caption("No TYPESAFE_API_KEY in demo/.env, live is off.")
         st.caption("Synthetic data only.")
 
 
@@ -89,11 +86,10 @@ body { font-variant-numeric: tabular-nums; }
 """
 
 
-def header(title: str, notebook: str):
-    """Title, source line, and a slot under them for the station's claim (filled once computed)."""
+def header(title: str):
+    """Title, and a slot under it for the station's claim (filled once computed)."""
     st.html(CSS)
     st.title(title)
-    st.caption(f"Notebook twin: notebooks/{notebook} · answers: {mode()}")
     return st.empty()
 
 

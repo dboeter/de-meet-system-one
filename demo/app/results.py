@@ -45,6 +45,7 @@ CHECK_NAMES = {
     "cancel_reason_code": ("Cancel reason", "cancel reasons"),
 }
 
+
 def check_label(cid: str) -> str:
     return CHECK_NAMES.get(cid, (cid, cid))[0]
 
@@ -159,9 +160,6 @@ SOURCES, TARGETS, SCHEMA_GOLD = (
     schema.load_gold(),
 )
 SHORTLISTS = {s["source_col"]: schema.shortlist(s, TARGETS) for s in SOURCES}
-PREFILL_TARGET = (
-    0.70  # share of columns pre-filled correctly that the migration team asked for
-)
 
 
 @st.cache_data(show_spinner="Asking Jev…")
@@ -199,9 +197,7 @@ def schema_claim(table: pd.DataFrame, scores: dict) -> Claim:
     return Claim(
         f"Jev pre-fills {right + wrong} of {len(table)} column mappings, "
         + ("none of them wrong." if not wrong else f"{wrong} of them wrong."),
-        f"The goal was {ui.percent(PREFILL_TARGET)} of columns pre-filled correctly; "
-        f"this is {ui.percent(scores['prefilled_correct'])}. The other {len(review)} go to "
-        f"review with Jev's suggestion, which is right for {int(review['correct'].sum())}.",
+        f"The other {len(review)} go to review with Jev's suggestion, which is right for {int(review['correct'].sum())}.",
     )
 
 

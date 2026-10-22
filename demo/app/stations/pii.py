@@ -6,7 +6,7 @@ import ui
 from jevdemo import pii
 from jevdemo.judge import LiveUnavailable, NotRecorded
 
-finding = ui.header("PII screening of free text", "04_pii.ipynb")
+finding = ui.header("PII screening of free text")
 
 notes, hits, rest = results.NOTES, results.HITS, results.UNSETTLED
 probs = results.pii_probs(ui.mode())

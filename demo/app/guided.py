@@ -26,6 +26,12 @@ ROUTE_COLOURS = {
     "clear": NEUTRAL,
 }
 BASELINE_GREY = "#8b9099"
+# Why a schema mapping landed where it did, keyed by schema.decide's reason.
+DECISION_LINES = {
+    "": "accept",
+    "1:1 conflict": "review: another column took it",
+    "low confidence": "review: Jev unsure",
+}
 
 ROUTE_LINES = {
     "excluded": "Health or Art. 9 data. The row stays out of gold.",
@@ -349,7 +355,6 @@ def system_one():
     answer = judge().ask(state, questions)
     with example(quote(questions["passes"].instructions), state, questions):
         st.html(label("Jev's answer") + answers(dq_row(check, value, answer)))
-        st.caption(ui.answer_caption(answer))
     st.html(
         '<div class="g-cards">'
         '<div class="g-card"><b>Noul</b>A yes/no question. One probability that the answer is yes.</div>'
@@ -361,7 +366,6 @@ def system_one():
         ("at 16 threads", "65 rows/s", ""),
         ("per million questions", "~$13", ""),
     )
-    st.caption("Measured 2026-10-21 on jev-1.13.0 with scripts/measure.py (spec.md).")
 
 
 def code_and_jev():
@@ -390,7 +394,7 @@ def dq_values():
     lead(
         step().title,
         "None of these is null or the wrong type, so type, null and range checks pass them all. "
-        "Each check is one sentence in checks.yaml.",
+        "Each check is one sentence of config.",
     )
     examples = {
         "address_is_postal": [
@@ -422,12 +426,15 @@ def dq_values():
     }
     parts = []
     for cid, check in checks.items():
-        parts.append(group(f"<b>{html.escape(cid)}</b> {html.escape(check.check)}"))
+        parts.append(
+            group(
+                f"<b>{html.escape(results.check_label(cid))}</b> {html.escape(check.check)}"
+            )
+        )
         parts += [dq_row(check, v, replies[(cid, v)]) for v in examples[cid]]
     state, questions = dq.check_request(checks[shown[0]], shown[1])
     with example(quote(questions["passes"].instructions), state, questions):
         st.html(label("Jev's answer, once per distinct value") + answers(*parts))
-        st.caption(ui.answer_caption(replies[shown]))
 
 
 def dq_choice():
@@ -452,7 +459,7 @@ def dq_choice():
         ]
         parts.append(
             row(
-                "p_pass = 1 − p(other)",
+                "Fits a code",
                 p,
                 [pipeline.LO, pipeline.HI],
                 outcome=landing(pipeline.bucket(p)),
@@ -470,7 +477,6 @@ def dq_choice():
         questions,
     ):
         st.html(label("Jev's answer: the top two options") + answers(*parts))
-        st.caption(ui.answer_caption(replies[-1]))
 
 
 def dq_scale():
@@ -482,16 +488,6 @@ def dq_scale():
         ("Row checks", len(results.ROWS) * len(results.CHECKS), ""),
         ("Questions to Jev", first.asked, ""),
         ("Questions on tomorrow's rerun", rerun.asked, ""),
-    )
-    manifest = (
-        pd.DataFrame(result.manifest["checks"]).T.rename_axis("check").reset_index()
-    )
-    static_table(
-        manifest.assign(
-            fail_rate=manifest["fail_rate"].map(ui.percent),
-            max_fail_rate=manifest["max_fail_rate"].map(ui.percent),
-            triggered=manifest["triggered"].map({True: "yes", False: ""}),
-        ).rename(columns={"max_fail_rate": "limit"})
     )
     distinct = (
         pd.DataFrame(result.rows)
@@ -528,7 +524,6 @@ def er_same_name():
             + label("Answers")
             + er_rows(ra, rb, answer.response.nouls["same"].noul)
         )
-        st.caption(ui.answer_caption(answer))
 
 
 def er_other_name():
@@ -573,19 +568,6 @@ def er_scale():
         ("Exact KvK/IBAN rule", len(results.EXACT), ""),
         ("Judged by Jev", len(results.AMBIGUOUS), ""),
         ("Review", scores["Jev"]["review"], ""),
-    )
-    st.caption(
-        "Same candidates, same exact rules. Baseline: Levenshtein similarity on normalized names, "
-        f"≥ {results.BASELINE_CUTS[1]:.2f} accept, ≤ {results.BASELINE_CUTS[0]:.2f} reject."
-    )
-    compared = pd.DataFrame(scores).T.rename_axis("method").reset_index()
-    static_table(
-        compared.assign(
-            precision=compared["precision"].map(ui.percent),
-            recall=compared["recall"].map(ui.percent),
-            review=compared["review"].astype(int),
-            merged=compared["merged"].astype(int),
-        )
     )
     names = {i: r["name"] for i, r in ER_RECORDS.items()}
     table = pd.DataFrame(matches)
@@ -636,7 +618,6 @@ def schema_example():
             + mapping_line(pick)
             + "</div>"
         )
-        st.caption(ui.answer_caption(answer))
 
 
 def schema_scale():
@@ -649,23 +630,24 @@ def schema_scale():
     static_table(
         wrong.assign(
             p=wrong["p"].map("{:.2f}".format),
-            reason=wrong["reason"].replace("", "accepted"),
+            reason=wrong["reason"].map(DECISION_LINES),
         )[["source_col", "target_col", "p", "reason", "gold"]].rename(
             columns={
                 "source_col": "Source column",
                 "target_col": "Jev's pick",
-                "reason": "Reason",
+                "p": "Confidence",
+                "reason": "Decision",
                 "gold": "Right answer",
             }
         )
     )
-    st.html(label("The output: a dbt sources.yml"))
-    st.code(
-        schema.sources_yml(decided, source_name="legacy_crm"),
-        language=None,
-        wrap_lines=True,
-        height=220,
-    )
+    with st.expander("The output: a dbt sources.yml"):
+        st.code(
+            schema.sources_yml(decided, source_name="legacy_crm"),
+            language=None,
+            wrap_lines=True,
+            height=220,
+        )
 
 
 def pii_example():
@@ -687,7 +669,6 @@ def pii_example():
             + pii_bars(p)
             + verdict(route_chip(pii.route(hits, p)), before="Route")
         )
-        st.caption(ui.answer_caption(answer))
     rows = ""
     for nid in ("N16", "N19"):
         other = NOTES[nid]["text"]
@@ -718,9 +699,6 @@ def pii_scale():
             for route, line in ROUTE_LINES.items()
         )
     )
-    with st.container(border=True):
-        st.markdown("**Before client data**")
-        st.write(results.GATE)
 
 
 def your_turn():
@@ -754,10 +732,7 @@ def your_turn():
                     pii_bars(p)
                     + verdict(route_chip(pii.route(hits, p)), before="Route")
                 )
-                st.caption(ui.answer_caption(answer))
-    st.caption(
-        "The preset answers from its recording. Anything else needs Live API calls on (sidebar)."
-    )
+                st.caption(ui.answer_caption(answer))  # live or recorded: the room asks
 
 
 STEPS = [

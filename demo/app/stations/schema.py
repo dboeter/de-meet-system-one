@@ -6,7 +6,7 @@ import ui
 from jevdemo import schema
 from jevdemo.judge import LiveUnavailable, NotRecorded
 
-finding = ui.header("Schema mapping for a migration", "03_schema.ipynb")
+finding = ui.header("Schema mapping for a migration")
 
 sources, targets, gold = results.SOURCES, results.TARGETS, results.SCHEMA_GOLD
 shortlists = results.SHORTLISTS

@@ -6,7 +6,7 @@ import ui
 from jevdemo import dq, pipeline
 from jevdemo.judge import LiveUnavailable, NotRecorded
 
-finding = ui.header("Semantic data-quality checks", "01_dq.ipynb")
+finding = ui.header("Semantic data-quality checks")
 
 rows, checks = results.ROWS, results.CHECKS
 judgments, first, rerun = results.dq_judgments(ui.mode())
@@ -14,7 +14,7 @@ judgments, first, rerun = results.dq_judgments(ui.mode())
 left, chart = st.columns([1, 2], gap="large")
 with left:
     lo, hi = st.slider(
-        "Thresholds on p_pass (reject ≤ lo, accept ≥ hi)",
+        "Thresholds (reject below, accept above)",
         0.0,
         1.0,
         (pipeline.LO, pipeline.HI),
@@ -76,7 +76,7 @@ def your_turn():
         try:
             answer = ui.judge(ui.mode()).ask(*dq.check_request(address, value))
             p = dq.to_judgment(address, value, answer.response).p_pass
-            st.metric(f"p_pass → {pipeline.bucket(p, lo, hi)}", f"{p:.2f}")
+            st.metric(pipeline.bucket(p, lo, hi).capitalize(), f"{p:.2f}")
             st.caption(ui.answer_caption(answer))
         except (NotRecorded, LiveUnavailable) as e:
             st.warning(str(e))
@@ -107,9 +107,7 @@ with quarantine:
         column_config={"p_pass": ui.P_COLUMN},
     )
 with review:
-    st.caption(
-        "Jev wasn't sure: review instead of a silent accept or reject."
-    )
+    st.caption("Jev wasn't sure: review instead of a silent accept or reject.")
     st.dataframe(
         decided[decided["decision"] == "review"].drop_duplicates(["check_id", "value"])[
             ["check_id", "value", "p_pass", "code"]

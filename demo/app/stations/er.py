@@ -7,7 +7,7 @@ from jevdemo import er
 from jevdemo.judge import LiveUnavailable, NotRecorded
 from jevdemo.pipeline import bucket
 
-finding = ui.header("Entity resolution: one supplier, two records", "02_entity.ipynb")
+finding = ui.header("Entity resolution: one supplier, two records")
 
 a, b, gold = results.ER_A, results.ER_B, results.ER_GOLD
 pairs, exact, ambiguous = results.PAIRS, results.EXACT, results.AMBIGUOUS
@@ -17,12 +17,12 @@ p_same = results.er_p_same(ui.mode())
 left, chart = st.columns([1, 2], gap="large")
 with left:
     lo, hi = st.slider(
-        "Thresholds on p_same (keep separate ≤ lo, merge ≥ hi)",
+        "Thresholds (reject below, accept above)",
         0.0,
         1.0,
         (er.LO, er.HI),
         0.01,
-        help="Chosen on this same small set, no holdout. Moving them makes no API calls.",
+        help="Moving them makes no API calls.",
     )
 
 matches = results.er_matches(p_same, lo, hi)
@@ -94,7 +94,7 @@ def your_turn():
         try:
             answer = ui.judge(ui.mode()).ask(*er.pair_request(*records))
             p = answer.response.nouls["same"].noul
-            st.metric(f"p_same → {bucket(p, lo, hi)}", f"{p:.2f}")
+            st.metric(bucket(p, lo, hi).capitalize(), f"{p:.2f}")
             st.caption(ui.answer_caption(answer))
         except (NotRecorded, LiveUnavailable) as e:
             st.warning(str(e))

@@ -10,7 +10,7 @@ from jevdemo import lessons
 
 DOC = Path(__file__).resolve().parent.parent / "docs" / "lessons-learned.md"
 
-finding = ui.header("Lessons learned: question wording", "05_lessons.ipynb")
+finding = ui.header("Lessons learned: question wording")
 judge = ui.judge(ui.mode())
 
 ui.claim(finding, results.LESSONS_CLAIM)
