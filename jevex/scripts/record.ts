@@ -22,11 +22,15 @@ const store = new RecordingStore(existsSync(FILE) ? parseRecordings(readFileSync
 
 type Job = { label: string; key: string; repeat: number; request: Recording["request"] };
 const jobs: Job[] = [];
+// A preset and a corpus case with the same text share a key; queue each (key, repeat) once.
+const queued = new Set<string>();
 const corpus = existsSync(CORPUS) ? parseCorpus(readFileSync(CORPUS, "utf8")) : [];
 for (const target of allTargets(MODEL, corpus)) {
   const key = await recordingKey(target.request);
   for (let repeat = 0; repeat < target.repeats; repeat++) {
-    if (!store.get(key, repeat)) jobs.push({ label: target.label, key, repeat, request: target.request });
+    if (store.get(key, repeat) || queued.has(`${key}:${repeat}`)) continue;
+    queued.add(`${key}:${repeat}`);
+    jobs.push({ label: target.label, key, repeat, request: target.request });
   }
 }
 

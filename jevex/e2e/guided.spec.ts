@@ -43,7 +43,7 @@ test("the guided script runs end to end from recordings with the network blocked
 
 test("free play and guided mode show the same station screen", async ({ page }) => {
   await page.goto("/#/flags");
-  await page.getByRole("button", { name: "Are you a bot?" }).click();
+  await page.getByRole("button", { name: "Third time writing" }).click();
   const free = await page.locator(".col-jev .jev-flags").innerText();
   await page.goto("/#/guided/3");
   await expect(page.locator(".col-jev .jev-flags")).toBeVisible();

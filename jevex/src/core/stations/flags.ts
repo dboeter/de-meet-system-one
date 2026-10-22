@@ -59,7 +59,7 @@ const PRESETS: readonly [FlagsPreset, ...FlagsPreset[]] = [
     label: "Are you a bot?",
     text: "Are you a bot? I've been going round in circles with this chat for twenty minutes.",
     gold: { ...none, wants_human: true },
-    note: "Hints at wanting a person without asking for one: a case for the review band.",
+    note: "Asks whether it is a bot, not for a person; the rubric counts that as wanting a human.",
   },
   {
     id: "not-a-lawyer",
@@ -73,7 +73,7 @@ const PRESETS: readonly [FlagsPreset, ...FlagsPreset[]] = [
     label: "Third time writing",
     text: "Third time writing about this and still nothing. Get me someone who can actually fix it.",
     gold: { ...none, wants_human: true, repeat_contact: true },
-    note: "Repeat contact and a request for a person, with none of the keywords.",
+    note: "Repeat contact and a request for a person, with none of the keywords: a case for the review band.",
   },
   {
     id: "manager",

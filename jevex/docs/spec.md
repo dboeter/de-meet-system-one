@@ -87,9 +87,10 @@ the baseline regex, the Jev questions, the presets, and what the presenter says.
   `cancellation_risk`.
 - **Regex baseline:** one pattern per flag, e.g. `wants_human: /\b(human|agent|real person|manager)\b/i`,
   `legal: /\b(lawyer|sue|legal|chargeback)\b/i`.
-- **Presets:** "Are you a bot?" (lands in the unsure middle: 0.32), "I'm not a lawyer,
+- **Presets:** "Are you a bot?" (asks about the bot, not for a person; about 0.8), "I'm not a lawyer,
   but charging me again… Please reverse it." (regex fires on `lawyer`, misses the refund),
-  "Third time writing about this" (repeat contact with no keyword), "My manager asked me to
+  "Third time writing about this" (repeat contact with no keyword; `wants_human` in the
+  review band), "My manager asked me to
   order 40 more" (regex fires on `manager`).
 - **Shows:** a per-flag threshold pair (`no < p < yes` = review band). Moving the sliders
   re-colours the results without a new request.
@@ -188,7 +189,7 @@ Modelled on the ex-regex playground screenshot.
   + speaker note.
 - `→` / `←` move between steps; `N` shows speaker notes on the presenter's screen; `L`
   opens the live box ("type your own email").
-- Default script (~5 min): 1 (refund came through) → 1 (negation) → 2 (are you a bot?) →
+- Default script (~5 min): 1 (refund came through) → 1 (negation) → 2 (third time writing) →
   3 (charged twice for missing package) → 4 (A-1190) → 6 (scoreboard) → keep-the-regex card
   → live box.
 

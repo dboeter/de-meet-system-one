@@ -30,9 +30,9 @@ export const GUIDED: readonly [GuidedStep, ...GuidedStep[]] = [
   {
     view: "flags",
     title: "Several things at once, and an honest 'not sure'",
-    start: { kind: "preset", presetId: "bot" },
+    start: { kind: "preset", presetId: "third-time" },
     highlight: ".col-jev",
-    note: "Five yes/no questions in one request. 'Are you a bot?' hints at wanting a person without asking: Jev puts it in the middle, so it goes to review. Move a slider: nothing is asked again.",
+    note: "Five yes/no questions in one request. 'Third time writing… get me someone': Jev is sure this is a repeat contact, but puts 'wants a human' in the middle, so it goes to review. Move a slider: nothing is asked again.",
   },
   {
     view: "triage",
