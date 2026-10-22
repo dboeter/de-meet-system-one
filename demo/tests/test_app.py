@@ -10,7 +10,6 @@ PAGES = [
     "stations/dq.py",
     "stations/er.py",
     "stations/schema.py",
-    "stations/schema_noul.py",
     "stations/pii.py",
 ]
 
