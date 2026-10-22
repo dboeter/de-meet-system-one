@@ -160,7 +160,7 @@ exact IDs, counting and arithmetic; use Jev for meaning; combine them as in stat
 Modelled on the ex-regex playground screenshot.
 
 - **Top bar:** product name, mode pill (`Recorded` / `Live`), model ID in use, guided/free
-  toggle, theme toggle.
+  toggle.
 - **Left nav:** stations grouped as *Classify* (1, 2, 3), *Extract* (4, 5), *Trust* (6).
 - **Station header:** title, one-sentence explanation, preset chips.
 - **Body, three columns on wide screens, stacked on narrow:**
@@ -175,7 +175,8 @@ Modelled on the ex-regex playground screenshot.
   from the [models page](https://docs.typesafe.ai/models.md); output tokens are free),
   latency (live only; recorded answers show the latency measured when recorded).
 - **Projector-friendly:** base font ≥ 18 px, a "presenter" zoom (`+`/`-`), high-contrast
-  dark and light themes, no hover-only information.
+  light theme matching the Streamlit demo's (`demo/.streamlit/config.toml`), no hover-only
+  information.
 - **Thresholds never re-ask:** moving a slider recomputes from stored probabilities.
 - **Editable meaning (live mode):** in free play the Jev column's instructions and
   option descriptions are editable, the counterpart of editing the regex. Rewording

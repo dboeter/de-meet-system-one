@@ -5,7 +5,6 @@ import { GUIDED } from "./guided.ts";
 import type { ViewStart } from "./start.ts";
 import { VIEWS, viewById, type ViewDef } from "./views.ts";
 
-type Theme = "light" | "dark";
 type Route =
   | { readonly kind: "free"; readonly view: ViewDef; readonly start: ViewStart }
   | { readonly kind: "guided"; readonly step: number }
@@ -114,7 +113,6 @@ export function App() {
 function Presenter() {
   const [route, setRoute] = useState<Route>(routeFromHash);
   const [mode, setMode] = useState<Mode>("recorded");
-  const [theme, setTheme] = useState<Theme>("light");
   const [zoom, setZoom] = useState(2);
   const [notes, setNotes] = useState(false);
   const health = useHealth();
@@ -129,9 +127,6 @@ function Presenter() {
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
-  useEffect(() => {
-    document.documentElement.dataset.theme = theme;
-  }, [theme]);
   useEffect(() => {
     document.documentElement.style.setProperty("--zoom", String(ZOOMS[zoom] ?? 1));
   }, [zoom]);
@@ -227,9 +222,6 @@ function Presenter() {
             </button>
             <button type="button" className="icon-button" aria-label="Zoom in" onClick={() => setZoom((z) => Math.min(z + 1, ZOOMS.length - 1))}>
               +
-            </button>
-            <button type="button" className="icon-button" onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
-              {theme === "light" ? "Dark" : "Light"}
             </button>
           </div>
         </header>

@@ -1,49 +1,35 @@
+/* The "achromatic ledger" theme of the Streamlit demo (demo/.streamlit/config.toml): ink chrome,
+   one blue on data (Jev's answers), regex in grey, status colours only on ok / review / bad.
+   Base size stays 18px, not the demo's 15px: jevex is sized for a projector at zoom 1. */
 :root {
   --zoom: 1;
   font-size: calc(18px * var(--zoom));
-  --font: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  --mono: "JetBrains Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
-  --radius: 0.8rem;
-}
+  --font: "Geist", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "Geist Mono", ui-monospace, "Cascadia Code", Consolas, monospace;
+  --radius: 8px;
+  --radius-button: 6px;
 
-[data-theme="light"] {
-  --bg: #eef1f4;
+  --bg: #ffffff;
   --panel: #ffffff;
-  --panel-2: #f6f8fa;
-  --text: #17202a;
-  --muted: #55606c;
-  --border: #d3d9df;
-  --accent: #d9452b;
-  --accent-soft: #fbe1da;
-  --regex: #1f5fbf;
-  --regex-soft: #dce8fb;
-  --ok: #19733a;
-  --ok-soft: #d8f0df;
-  --bad: #b3261e;
-  --bad-soft: #f9dedc;
-  --review: #8a5a00;
-  --review-soft: #fbedc8;
-  --track: #e3e7eb;
-}
-
-[data-theme="dark"] {
-  --bg: #0f1418;
-  --panel: #182027;
-  --panel-2: #1f2932;
-  --text: #f1f4f6;
-  --muted: #a7b2bc;
-  --border: #33414d;
-  --accent: #ff7a5c;
-  --accent-soft: #4a2219;
-  --regex: #7fb2ff;
-  --regex-soft: #1b3150;
-  --ok: #6fdc8c;
-  --ok-soft: #15361f;
-  --bad: #ff8a80;
-  --bad-soft: #4a1d1a;
-  --review: #ffcf5c;
-  --review-soft: #45360f;
-  --track: #2b3742;
+  --panel-2: #f2f4f7;
+  --code-bg: #f0f0f0;
+  --text: #0a0a0a;
+  --muted: #3d3d3d;
+  --border: #e6e6e6;
+  --ink: #141414;
+  --accent: #1d5fbf;
+  --regex: #5c5c5c;
+  --ok: #2e7d32;
+  --bad: #c4242a;
+  --review: #b45309;
+  --track: #e8ebf0;
+  --quiet: #8a8a8a;
+  /* Tints derived from the hue so they stay subordinate to it. */
+  --accent-soft: color-mix(in srgb, var(--accent) 11%, white);
+  --regex-soft: color-mix(in srgb, var(--regex) 11%, white);
+  --ok-soft: color-mix(in srgb, var(--ok) 11%, white);
+  --bad-soft: color-mix(in srgb, var(--bad) 11%, white);
+  --review-soft: color-mix(in srgb, var(--review) 13%, white);
 }
 
 * {
@@ -56,6 +42,7 @@ body {
   color: var(--text);
   font-family: var(--font);
   line-height: 1.5;
+  font-variant-numeric: tabular-nums;
 }
 
 code,
@@ -76,7 +63,7 @@ button:disabled {
 }
 
 :focus-visible {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--ink);
   outline-offset: 2px;
 }
 
@@ -117,7 +104,7 @@ button:disabled {
 }
 
 .logo {
-  color: var(--accent);
+  color: var(--ink);
   font-family: var(--mono);
 }
 
@@ -131,8 +118,8 @@ button:disabled {
 .pill,
 .icon-button {
   border: 1px solid var(--border);
-  background: var(--panel-2);
-  border-radius: 999px;
+  background: var(--panel);
+  border-radius: var(--radius-button);
   padding: 0.35rem 0.9rem;
 }
 
@@ -146,12 +133,12 @@ button:disabled {
 }
 
 .pill.mode-live {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--ink);
+  color: var(--ink);
 }
 
 .pill.mode-live .dot {
-  background: var(--accent);
+  background: var(--ok);
 }
 
 .model {
@@ -161,7 +148,7 @@ button:disabled {
 }
 
 .sidenav {
-  background: var(--panel);
+  background: var(--panel-2);
   border-right: 1px solid var(--border);
   padding: 1rem 0.75rem;
 }
@@ -195,12 +182,12 @@ button:disabled {
 }
 
 .nav-item:hover {
-  background: var(--panel-2);
+  background: var(--track);
 }
 
 .nav-item.active {
-  background: var(--panel-2);
-  border-left-color: var(--accent);
+  background: var(--track);
+  border-left-color: var(--ink);
   font-weight: 600;
 }
 
@@ -213,7 +200,9 @@ button:disabled {
 
 .station-header h1 {
   margin: 0;
-  font-size: 2rem;
+  font-size: 1.6rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
 }
 
 .station-header h1 code {
@@ -238,14 +227,14 @@ button:disabled {
 .chip {
   border: 1px solid var(--border);
   background: var(--panel);
-  border-radius: 999px;
+  border-radius: var(--radius-button);
   padding: 0.35rem 0.95rem;
 }
 
 .chip.selected {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
 }
 
 .columns {
@@ -297,7 +286,7 @@ input[type="text"] {
   color: inherit;
   background: var(--panel-2);
   border: 1px solid var(--border);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-button);
   padding: 0.6rem 0.75rem;
   resize: vertical;
   width: 100%;
@@ -317,10 +306,10 @@ textarea.code {
 }
 
 .ask {
-  background: var(--accent);
+  background: var(--ink);
   color: #fff;
   border: none;
-  border-radius: 0.5rem;
+  border-radius: var(--radius-button);
   padding: 0.5rem 1.3rem;
   font-weight: 600;
 }
@@ -430,7 +419,7 @@ mark.hit-jev {
 .bar-fill {
   display: block;
   height: 100%;
-  background: var(--muted);
+  background: var(--quiet);
 }
 
 .bars li.chosen .bar-fill,
@@ -461,7 +450,7 @@ mark.hit-jev {
 }
 
 .slider input {
-  accent-color: var(--accent);
+  accent-color: var(--ink);
 }
 
 .slider output {
@@ -520,7 +509,7 @@ mark.hit-jev {
 }
 
 .usage .source-live {
-  color: var(--accent);
+  color: var(--ok);
 }
 
 .details {
@@ -546,7 +535,7 @@ mark.hit-jev {
   font-family: var(--mono);
   font-size: 0.9rem;
   overflow-x: auto;
-  background: var(--panel-2);
+  background: var(--code-bg);
   border-radius: 0.5rem;
   padding: 0.75rem;
 }
@@ -669,7 +658,7 @@ mark.hit-jev {
   width: 100%;
   min-width: 0;
   margin: 0;
-  accent-color: var(--accent);
+  accent-color: var(--ink);
 }
 
 .band-sliders output {
@@ -878,8 +867,9 @@ select {
 /* Guided mode */
 
 .pill.selected {
-  border-color: var(--accent);
-  color: var(--accent);
+  border-color: var(--ink);
+  background: var(--ink);
+  color: #fff;
 }
 
 .guided-bar {
@@ -920,7 +910,7 @@ select {
 }
 
 .spotlight {
-  outline: 3px solid var(--accent);
+  outline: 3px solid var(--ink);
   outline-offset: 4px;
   border-radius: var(--radius);
   transition: outline-color 0.3s;
