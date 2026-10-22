@@ -62,8 +62,8 @@ holds the failing rows.
 
 **Design.**
 
-1. Config: per column, a check written in plain language, e.g. `address: "is a postal
-   address (street + number, optionally postcode/city)"`, plus a threshold and an action
+1. Config: per column, a check written in plain language, e.g. `address: "identifies one
+   specific building by its street name and its own house number"`, plus a threshold and an action
    (`warn` | `quarantine` | `fail_run`).
 2. Code: deduplicate the values first (distinct values are usually far fewer than rows)
    and cache answers by `(check_id, value_hash)`.

@@ -25,17 +25,18 @@ TARGET_FAMILY = {
 }
 
 QUESTION = "Which target column holds the same data as `source_column`?"
-# Prompt variants: what a consultant knows about the source system, and whether option
-# descriptions carry the target type (the shortlist already filters on type).
+# What a consultant knows about the source system, sent in state. Option descriptions leave
+# out the target type: the shortlist already filters on it. VARIANTS keeps the wordings
+# this was measured against; `default` is what mapping_request sends.
 SOURCE_SYSTEM = (
     "A Dutch legacy ERP. Table and column names are abbreviated Dutch words; "
     "comments and sample values are Dutch."
 )
 VARIANTS = {
-    "baseline": {},
-    "no_type": {"type_suffix": False},
-    "context": {"context": SOURCE_SYSTEM},
-    "no_type_context": {"type_suffix": False, "context": SOURCE_SYSTEM},
+    "type_no_context": {"type_suffix": True, "context": None},
+    "no_type_no_context": {"context": None},
+    "type_context": {"type_suffix": True},
+    "default": {},
 }
 
 BOOL_QUESTION = "Does `source_column` hold the same data as the target column {target}: {description}?"
@@ -90,8 +91,8 @@ def shortlist(source: dict, targets: list[dict]) -> list[str]:
 def mapping_request(
     source: dict,
     targets: list[dict],
-    type_suffix: bool = True,
-    context: str | None = None,
+    type_suffix: bool = False,
+    context: str | None = SOURCE_SYSTEM,
 ):
     described = {
         t["target_col"]: f"{t['description']} ({t['type']})"
@@ -118,7 +119,8 @@ def mapping_request(
 
 def bool_mapping_request(source: dict, targets: list[dict]):
     """The Choice experiment as one yes/no Noul per shortlisted target, without a `none` option."""
-    state, _ = mapping_request(source, targets)
+    # The state it was measured with (no source_system), so its recordings still answer.
+    state, _ = mapping_request(source, targets, context=None)
     described = {t["target_col"]: f"{t['description']} ({t['type']})" for t in targets}
     questions = {
         o: Noul(instructions=BOOL_QUESTION.format(target=o, description=described[o]))

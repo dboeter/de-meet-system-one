@@ -10,7 +10,7 @@ checks:
   - id: address_is_postal
     column: address
     kind: noul
-    check: is a postal address (street + number, optionally postcode/city)
+    check: identifies one specific building by its street name and its own house number
     max_fail_rate: 0.50
     action: quarantine
 

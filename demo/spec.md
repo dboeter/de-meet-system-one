@@ -44,11 +44,12 @@ synthetic rows → code step (normalize / block / regex / shortlist / dedupe)
   `warn | quarantine | fail_run`); distinct values first; cache by `(check_id, value_hash)`.
 - **Jev:** one Noul per distinct value per check; a Choice over the code list plus
   `other/none` for `cancel_reason`.
-- **Prompt variants:** `checks_variants.yaml`, same ids, compared in the notebook. Asking for
-  one specific building with its own house number in the address check
-  lifted the lowest true row from 0.68 to 0.87 and cut review from 5 to 3 rows. Splitting the
-  cancel check into a pass Noul plus a code Choice did worse: review 1 → 7 rows, lowest true
-  row 0.94 → 0.67; `1 - p(other)` stays.
+- **Prompt variants:** `checks_variants.yaml` keeps wordings that did worse, same ids, compared
+  in the notebook. The address check asks for one specific building with its own house
+  number; the previous wording (an address's parts, postcode/city optional) had its lowest
+  true row at 0.68 instead of 0.87 and 5 review rows instead of 3. Splitting the cancel check
+  into a pass Noul plus a code Choice: review 1 → 7 rows, lowest true row 0.94 → 0.67;
+  `1 - p(other)` stays.
 - **Output:** per-row pass probability and flag, quarantine table, run-manifest fail rate;
   one column crosses its threshold and `fail_run` fires. Show cache hits on a rerun.
 - **Live input:** a value plus a plain-language check.
@@ -77,16 +78,17 @@ synthetic rows → code step (normalize / block / regex / shortlist / dedupe)
 - **Output:** mapping table `(source_col, target_col | none, p)`; review flags for 1:1
   conflicts and low confidence; a generated dbt `sources.yml`.
 - **Live input:** a column name, type and sample values.
-- **Result on the synthetic set:** 76% top-1, 60% pre-filled
-  correctly, below the 70% success target. Two question variants did worse: generic context
-  in the question (64%) and a companion Noul instead of the `none` option (36%). One wrong
-  mapping is pre-filled (`ORD_BTW_BDR → none` at 0.86). Shortlist recall is 100% by
+- **Result on the synthetic set:** 80% top-1, 64% pre-filled
+  correctly, no wrong pre-fill; below the 70% success target. Option descriptions leave out
+  the target type and state carries the source system (`schema.SOURCE_SYSTEM`); the first
+  version, with a `(type)` suffix and no source system, gave 76% top-1, 60% pre-filled and
+  one wrong pre-fill (`ORD_BTW_BDR → none` at 0.86). Other question variants: generic
+  context in the question (64%) and a companion Noul instead of the `none` option (36%). Shortlist recall is 100% by
   construction (every type-compatible column of the declared tables), so it measures the
   table mapping, not a ranking.
-- **Prompt variants** (`schema.VARIANTS`, one run each): dropping the `(type)` suffix from
-  option descriptions gives 64% pre-filled and removes the wrong pre-fill; the source system
-  in state gives 80% top-1 but 60% pre-filled; both together 80% top-1, 64% pre-filled, no
-  wrong pre-fill. Still below 70%.
+- **Prompt variants** (`schema.VARIANTS`, one run each): dropping the `(type)` suffix alone
+  gives 64% pre-filled and removes the wrong pre-fill; the source system in state alone gives
+  80% top-1 but 60% pre-filled.
 
 ### 4. PII screening
 

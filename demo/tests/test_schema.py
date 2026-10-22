@@ -149,14 +149,14 @@ def test_ambiguous_bool_mappings_go_to_review():
     assert (decided["decision"], decided["reason"]) == ("review", "several targets")
 
 
-def test_mapping_variants_drop_the_type_suffix_and_add_source_context():
+def test_mapping_sends_source_context_and_leaves_out_the_target_type_by_default():
     source = column("KLANT.KLT_NR", "NUMBER(10)")
-    base_state, base = schema.mapping_request(source, TARGETS)
-    state, variant = schema.mapping_request(
-        source, TARGETS, type_suffix=False, context="ERP"
+    state, questions = schema.mapping_request(source, TARGETS)
+    old_state, old = schema.mapping_request(
+        source, TARGETS, type_suffix=True, context=None
     )
 
-    assert base["target"].criteria["customer.customer_id"].endswith("(integer)")
-    assert not variant["target"].criteria["customer.customer_id"].endswith("(integer)")
-    assert "source_system" not in base_state
-    assert state["source_system"] == "ERP"
+    assert questions["target"].criteria["customer.customer_id"] == "Customer number"
+    assert state["source_system"] == schema.SOURCE_SYSTEM
+    assert old["target"].criteria["customer.customer_id"].endswith("(integer)")
+    assert "source_system" not in old_state
