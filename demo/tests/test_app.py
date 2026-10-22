@@ -25,6 +25,8 @@ def test_page_renders_from_recordings(page, presenting, monkeypatch):
     assert not at.exception
     assert at.title[0].value
     assert bool(at.tabs) != presenting  # the tables are detail
+    # The live input closes the page; PII adds its data-residency note after it.
+    assert "Your turn" in [h.value for h in at.subheader][-2:]
     at.button[0].click().run()  # the preset in "Your turn" is recorded
     assert not at.exception
     assert not at.warning

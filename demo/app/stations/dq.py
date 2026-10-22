@@ -70,21 +70,24 @@ with chart:
         "in between, a person decides."
     )
 
-st.subheader("Your turn")
-address = dq.address_check(checks)
-with st.form("live"):
-    value = st.text_input("An address value", dq.LIVE_PRESET)
-    asked = st.form_submit_button("Ask Jev", type="primary")
-if asked:
-    try:
-        answer = ui.judge(ui.mode()).ask(*dq.check_request(address, value))
-        p = dq.to_judgment(address, value, answer.response).p_pass
-        st.metric(f"p_pass → {pipeline.bucket(p, lo, hi)}", f"{p:.2f}")
-        st.caption(ui.answer_caption(answer))
-    except (NotRecorded, LiveUnavailable) as e:
-        st.warning(str(e))
 
-ui.end_of_presenter_view()
+def your_turn():
+    st.subheader("Your turn")
+    address = dq.address_check(checks)
+    with st.form("live"):
+        value = st.text_input("An address value", dq.LIVE_PRESET)
+        asked = st.form_submit_button("Ask Jev", type="primary")
+    if asked:
+        try:
+            answer = ui.judge(ui.mode()).ask(*dq.check_request(address, value))
+            p = dq.to_judgment(address, value, answer.response).p_pass
+            st.metric(f"p_pass → {pipeline.bucket(p, lo, hi)}", f"{p:.2f}")
+            st.caption(ui.answer_caption(answer))
+        except (NotRecorded, LiveUnavailable) as e:
+            st.warning(str(e))
+
+
+ui.end_of_presenter_view(your_turn)
 
 st.subheader("Run manifest")
 st.dataframe(
@@ -166,3 +169,5 @@ ui.request_view(
     *dq.check_request(checks[2], rows[0][checks[2].column]),
     label="What Jev receives: a Choice",
 )
+
+your_turn()

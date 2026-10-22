@@ -38,9 +38,14 @@ def presenting() -> bool:
     return st.session_state.get("presenting", False)
 
 
-def end_of_presenter_view():
-    """Everything a page draws after this call is detail, shown only with presenter view off."""
+def end_of_presenter_view(closing=None):
+    """Everything a page draws after this call is detail, shown only with presenter view off.
+
+    In presenter view `closing` (the live input) is drawn here; otherwise the page calls it at its end.
+    """
     if presenting():
+        if closing:
+            closing()
         st.stop()
 
 

@@ -58,35 +58,40 @@ with chart:
         "unless another column claims the same target; the rest goes to the consultant."
     )
 
-st.subheader("Your turn")
-preset = schema.LIVE_PRESET
-with st.form("live"):
-    c1, c2 = st.columns(2)
-    name = c1.text_input(
-        "Column (TABLE.COLUMN, table KLANT or ORDER)", preset["source_col"]
-    )
-    kind = c2.text_input("Type", preset["type"])
-    comment = c1.text_input("Comment", preset["comment"])
-    samples = c2.text_input(
-        "Sample values, separated by |", "|".join(preset["samples"])
-    )
-    asked = st.form_submit_button("Ask Jev", type="primary")
-if asked:
-    column = {
-        "source_col": name,
-        "type": kind,
-        "comment": comment,
-        "samples": samples.split("|"),
-    }
-    try:
-        answer = ui.judge(ui.mode()).ask(*schema.mapping_request(column, targets))
-        m = schema.to_mapping(column, answer.response)
-        st.metric(f"{m['source_col']} →", m["target_col"])
-        st.caption(f"p = {m['p']:.2f} · {ui.answer_caption(answer)}")
-    except (NotRecorded, LiveUnavailable, KeyError) as e:
-        st.warning(f"Unknown source table: {e}" if isinstance(e, KeyError) else str(e))
 
-ui.end_of_presenter_view()
+def your_turn():
+    st.subheader("Your turn")
+    preset = schema.LIVE_PRESET
+    with st.form("live"):
+        c1, c2 = st.columns(2)
+        name = c1.text_input(
+            "Column (TABLE.COLUMN, table KLANT or ORDER)", preset["source_col"]
+        )
+        kind = c2.text_input("Type", preset["type"])
+        comment = c1.text_input("Comment", preset["comment"])
+        samples = c2.text_input(
+            "Sample values, separated by |", "|".join(preset["samples"])
+        )
+        asked = st.form_submit_button("Ask Jev", type="primary")
+    if asked:
+        column = {
+            "source_col": name,
+            "type": kind,
+            "comment": comment,
+            "samples": samples.split("|"),
+        }
+        try:
+            answer = ui.judge(ui.mode()).ask(*schema.mapping_request(column, targets))
+            m = schema.to_mapping(column, answer.response)
+            st.metric(f"{m['source_col']} →", m["target_col"])
+            st.caption(f"p = {m['p']:.2f} · {ui.answer_caption(answer)}")
+        except (NotRecorded, LiveUnavailable, KeyError) as e:
+            st.warning(
+                f"Unknown source table: {e}" if isinstance(e, KeyError) else str(e)
+            )
+
+
+ui.end_of_presenter_view(your_turn)
 
 mapping, wrong, yml, tried, data = st.tabs(
     [
@@ -130,3 +135,5 @@ with data:
 
 example = next(s for s in sources if s["source_col"] == "KLANT.KLT_NM_VOL")
 ui.request_view(*schema.mapping_request(example, targets))
+
+your_turn()

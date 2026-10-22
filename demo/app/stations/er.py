@@ -75,37 +75,40 @@ with chart:
         f"stay apart, right of {hi:.2f} they merge; in between, a person decides."
     )
 
-st.subheader("Your turn")
-fields = ["name", "street", "postcode", "city", "kvk", "iban"]
-shown = ["name", "city"] if ui.presenting() else fields  # the rest keeps its preset
-with st.form("live"):
-    cols = st.columns(2)
-    records = []
-    for col, preset in zip(cols, er.LIVE_PRESET, strict=True):
-        with col:
-            st.markdown(f"Record {preset['id']}")
-            records.append(
-                {
-                    "id": preset["id"],
-                    **{
-                        k: st.text_input(k, preset[k], key=f"{preset['id']}-{k}")
-                        if k in shown
-                        else preset[k]
-                        for k in fields
-                    },
-                }
-            )
-    asked = st.form_submit_button("Ask Jev", type="primary")
-if asked:
-    try:
-        answer = ui.judge(ui.mode()).ask(*er.pair_request(*records))
-        p = answer.response.nouls["same"].noul
-        st.metric(f"p_same → {bucket(p, lo, hi)}", f"{p:.2f}")
-        st.caption(ui.answer_caption(answer))
-    except (NotRecorded, LiveUnavailable) as e:
-        st.warning(str(e))
 
-ui.end_of_presenter_view()
+def your_turn():
+    st.subheader("Your turn")
+    fields = ["name", "street", "postcode", "city", "kvk", "iban"]
+    shown = ["name", "city"] if ui.presenting() else fields  # the rest keeps its preset
+    with st.form("live"):
+        cols = st.columns(2)
+        records = []
+        for col, preset in zip(cols, er.LIVE_PRESET, strict=True):
+            with col:
+                st.markdown(f"Record {preset['id']}")
+                records.append(
+                    {
+                        "id": preset["id"],
+                        **{
+                            k: st.text_input(k, preset[k], key=f"{preset['id']}-{k}")
+                            if k in shown
+                            else preset[k]
+                            for k in fields
+                        },
+                    }
+                )
+        asked = st.form_submit_button("Ask Jev", type="primary")
+    if asked:
+        try:
+            answer = ui.judge(ui.mode()).ask(*er.pair_request(*records))
+            p = answer.response.nouls["same"].noul
+            st.metric(f"p_same → {bucket(p, lo, hi)}", f"{p:.2f}")
+            st.caption(ui.answer_caption(answer))
+        except (NotRecorded, LiveUnavailable) as e:
+            st.warning(str(e))
+
+
+ui.end_of_presenter_view(your_turn)
 
 st.subheader("Jev against the fuzzy-match baseline")
 st.caption(
@@ -168,3 +171,5 @@ with tables:
 
 jansen = next(p for p in ambiguous if p[0]["id"] == "A02")
 ui.request_view(*er.pair_request(*jansen))
+
+your_turn()

@@ -65,42 +65,47 @@ with chart:
         "costs more than a review."
     )
 
-st.subheader("Your turn")
-with st.form("live"):
-    text = st.text_area("A Dutch note", pii.LIVE_PRESET, height=80)
-    asked = st.form_submit_button("Ask Jev", type="primary")
-if asked:
-    found = pii.regex_hits(text)
-    if found:
-        st.metric("Route (Jev not asked)", pii.route(found, {}))
-        st.caption(f"regex: {', '.join(sorted(found))}")
-    else:
-        try:
-            answer = ui.judge(ui.mode()).ask(*pii.screen_request(text))
-            p = {c: answer.response.nouls[c].noul for c in pii.CATEGORIES}
-            st.metric("Route", pii.route(set(), p))
-            st.dataframe(
-                pd.DataFrame([p]),
-                hide_index=True,
-                column_config={c: ui.P_COLUMN for c in p},
-            )
-            st.caption(ui.answer_caption(answer))
-        except (NotRecorded, LiveUnavailable) as e:
-            st.warning(str(e))
 
-st.subheader("The gate before client data")
-st.markdown(
-    "This runs on synthetic notes only. Sending client text to an external API to find PII needs the "
-    "data-residency question settled first: retention, hosting region and the processing agreement."
-)
+def closing():
+    """Your turn, then the gate; the gate's caveats are detail."""
+    st.subheader("Your turn")
+    with st.form("live"):
+        text = st.text_area("A Dutch note", pii.LIVE_PRESET, height=80)
+        asked = st.form_submit_button("Ask Jev", type="primary")
+    if asked:
+        found = pii.regex_hits(text)
+        if found:
+            st.metric("Route (Jev not asked)", pii.route(found, {}))
+            st.caption(f"regex: {', '.join(sorted(found))}")
+        else:
+            try:
+                answer = ui.judge(ui.mode()).ask(*pii.screen_request(text))
+                p = {c: answer.response.nouls[c].noul for c in pii.CATEGORIES}
+                st.metric("Route", pii.route(set(), p))
+                st.dataframe(
+                    pd.DataFrame([p]),
+                    hide_index=True,
+                    column_config={c: ui.P_COLUMN for c in p},
+                )
+                st.caption(ui.answer_caption(answer))
+            except (NotRecorded, LiveUnavailable) as e:
+                st.warning(str(e))
 
-ui.end_of_presenter_view()
+    st.subheader("The gate before client data")
+    gate = (
+        "This runs on synthetic notes only. Sending client text to an external API to find PII needs the "
+        "data-residency question settled first: retention, hosting region and the processing agreement."
+    )
+    if not ui.presenting():
+        gate += (
+            "\n\n- A regex hit skips Jev, so a note with a phone number and health details is only masked.\n"
+            "- Jev says whether a note contains PII, not where. Masking the span is a later step.\n\n"
+            "More depth: the jevex demo (`../jevex`) compares regex and Jev on customer-service email."
+        )
+    st.markdown(gate)
 
-st.markdown(
-    "- A regex hit skips Jev, so a note with a phone number and health details is only masked.\n"
-    "- Jev says whether a note contains PII, not where. Masking the span is a later step.\n\n"
-    "More depth: the jevex demo (`../jevex`) compares regex and Jev on customer-service email."
-)
+
+ui.end_of_presenter_view(closing)
 
 route_tab, cats, extra, regex = st.tabs(
     ["Routing", "Per category", "Flagged beyond our labels", "Regex hits"]
@@ -160,3 +165,5 @@ with regex:
     )
 
 ui.request_view(*pii.screen_request(notes[0]["text"]))
+
+closing()
