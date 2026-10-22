@@ -4,6 +4,7 @@ The station pages stay as they are, for questions. `STEPS` is the one registry t
 the tests rely on, and the current step lives only in the URL (`?step=N`).
 """
 
+import base64
 import html
 import json
 import re
@@ -68,6 +69,8 @@ CSS = """
   align-items: center; gap: 12px 14px; max-width: 560px; }
 .g-answers .g-group { grid-column: 1 / -1; margin-top: 6px; font-size: 14px; color: #3d3d3d; }
 .g-answers .g-group b { color: #0a0a0a; }
+.g-answers .g-group-short { grid-column: 1 / 4; }
+.g-answers .g-group-short + .g-chip { margin-top: 6px; }
 .g-head { padding-bottom: 4px; border-bottom: 1px solid #e6e6e6; font-size: 12px; color: #5f5f5f; }
 .g-head-p { grid-column: span 2; }
 .g-quote.small { margin: 10px 0 2px; font-size: 16px; }
@@ -101,17 +104,20 @@ CSS = """
 .g-card { padding: 10px 16px; border: 1px solid #e6e6e6; border-radius: 8px; background: #f7f8fa;
   font-size: 14px; line-height: 1.5; }
 .g-card b { margin-right: 6px; font-size: 17px; }
-.g-flow { display: flex; align-items: stretch; gap: 8px; }
-.g-flow .g-node { display: flex; flex-direction: column; justify-content: center; padding: 12px 14px;
-  border: 1px solid #cfd3da; border-radius: 8px; background: #f7f8fa; font-size: 13px; color: #3d3d3d; }
-.g-flow .g-node b { font-size: 16px; color: #0a0a0a; }
-.g-flow .g-jev { border: 2px solid #1d5fbf; background: #fff; }
-.g-flow .g-arrow { align-self: center; color: #3d3d3d; font-size: 20px; }
-.g-flow .g-lanes { display: flex; flex: 1; flex-direction: column; justify-content: space-between; gap: 14px; }
-.g-flow .g-lane { display: flex; flex: 1; align-items: center; gap: 8px; }
-.g-flow .g-lane small { flex: none; font-size: 13px; color: #3d3d3d; }
-.g-flow .g-rail { flex: 1; height: 0; border-top: 2px solid #cfd3da; }
-.g-flow .g-buckets { display: flex; flex-direction: column; justify-content: center; gap: 8px; }
+.g-cards.g-stack { grid-template-columns: 1fr; gap: 8px; max-width: 560px; }
+.g-stations { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.g-station { position: relative; padding: 16px 20px 16px 64px; border: 1px solid #cfd3da;
+  border-left: 4px solid #1d5fbf; border-radius: 10px; background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .06); }
+.g-station h3 { margin: 0 0 10px; padding: 0; font-size: 20px; font-weight: 600; }
+.g-station .g-num { position: absolute; top: 16px; left: 18px; display: grid; place-items: center;
+  width: 32px; height: 32px; border-radius: 50%; background: #1d5fbf; color: #fff; font-weight: 600; }
+.g-station dl { display: grid; grid-template-columns: 40px 1fr; gap: 6px 10px; margin: 0; font-size: 14px; }
+.g-station dt { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase;
+  color: #5f5f5f; padding-top: 2px; }
+.g-station dt.g-jev-ink { color: #1d5fbf; }
+.g-station dd { margin: 0; color: #3d3d3d; }
+.g-station dd.g-ask { color: #0a0a0a; font-size: 16px; line-height: 1.35; }
 </style>
 """
 
@@ -183,7 +189,10 @@ def head(item: str, p: str = "Probability of yes", outcome: str = "Decision") ->
     )
 
 
-def group(heading: str) -> str:
+def group(heading: str, outcome: str = "") -> str:
+    """A heading across the answer list; with an outcome, the chip sits in the Decision column."""
+    if outcome:
+        return f'<div class="g-group g-group-short">{heading}</div>{outcome}'
     return f'<div class="g-group">{heading}</div>'
 
 
@@ -371,22 +380,24 @@ def system_one():
         "You send Jev a row and a question in plain words; it sends back a probability.",
     )
     check = dq_check("address_is_postal")
-    value = dq_value(check, "Postbus 1200, 3000 BE Rotterdam")
+    value = dq_value(check, "Coolsingel 40, 3011 AD Rotterdam")
     state, questions = dq.check_request(check, value)
     answer = judge().ask(state, questions)
+    # Everything reads down the left column, next to the request: answer, question kinds, then cost.
     with example(quote(questions["passes"].instructions), state, questions):
         st.html(answers(head("Value"), dq_row(check, value, answer)))
-    st.html(
-        '<div class="g-cards">'
-        '<div class="g-card"><b>Noul</b>A yes/no question. One probability that the answer is yes.</div>'
-        f'<div class="g-card"><b>Choice</b>Pick one of up to {schema.MAX_OPTIONS} options. '
-        "A probability for every option.</div></div>"
-    )
-    figures(
-        ("per question (median)", "~215 ms", ""),
-        ("at 16 threads", "65 rows/s", ""),
-        ("per million questions", "~$13", ""),
-    )
+        st.html(
+            label("Two kinds of question") + '<div class="g-cards g-stack">'
+            '<div class="g-card"><b>Noul</b>A yes/no question. One probability that the answer is yes.</div>'
+            f'<div class="g-card"><b>Choice</b>Pick one of up to {schema.MAX_OPTIONS} options. '
+            "A probability for every option.</div></div>"
+        )
+        st.html(label("Speed and cost"))
+        figures(
+            ("per question (median)", "~215 ms", ""),
+            ("at 16 threads", "65 rows/s", ""),
+            ("per million questions", "~$13", ""),
+        )
 
 
 def code_and_jev():
@@ -394,20 +405,100 @@ def code_and_jev():
         step().title,
         "Code settles what rules can; Jev judges the rest.",
     )
-    buckets = "".join(chip(b, c) for b, c in ui.BUCKET_COLOURS.items())
+    # st.html's sanitizer drops inline <svg>; as an image it survives, but can't use the page's web font.
+    svg = base64.b64encode(pipeline_svg().encode()).decode()
     st.html(
-        '<div class="g-flow">'
-        '<div class="g-node"><b>Rows</b></div><span class="g-arrow">→</span>'
-        '<div class="g-node"><b>Code</b>normalize · block · exact rules · regex</div>'
-        '<span class="g-arrow">→</span>'
-        '<div class="g-lanes">'
-        '<div class="g-lane"><small>rows the rules settle</small><span class="g-rail"></span></div>'
-        '<div class="g-lane"><small>ambiguous rows</small><span class="g-arrow">→</span>'
-        '<div class="g-node g-jev"><b>Jev</b>a probability</div><span class="g-arrow">→</span>'
-        '<div class="g-node"><b>Thresholds</b>lo / hi, yours</div></div></div>'
-        f'<span class="g-arrow">→</span><div class="g-buckets">{buckets}</div></div>'
+        f'<img src="data:image/svg+xml;base64,{svg}" style="width:100%;max-width:1040px" '
+        'alt="Rows go through code. A rule settles the clear yes and no; the rest go to Jev, and your '
+        'thresholds sort its answer into accept, review or reject.">'
     )
-    st.table(results.STATIONS)
+    cards = "".join(
+        f'<div class="g-station"><span class="g-num">{i}</span><h3>{html.escape(name)}</h3>'
+        f"<dl><dt>Code</dt><dd>{html.escape(code)}</dd>"
+        f'<dt class="g-jev-ink">Jev</dt><dd class="g-ask">{html.escape(ask)}</dd></dl></div>'
+        for i, (name, (code, ask)) in enumerate(results.STATIONS.iterrows(), 1)
+    )
+    st.html(
+        label("The four stations in this demo")
+        + f'<div class="g-stations">{cards}</div>'
+    )
+
+
+def pipeline_svg(p: float = 0.73) -> str:
+    """Rows through code into three lanes; the middle lane goes through Jev and the thresholds.
+
+    The threshold bar is drawn to scale from pipeline.LO and HI, with an example answer `p` on it.
+    """
+    blue, grey, ink = ui.DATA_HUE, "#cfd3da", "#3d3d3d"
+    colours = ui.BUCKET_COLOURS
+    bar_x, bar_w = 714, 144  # the threshold bar inside its node
+
+    def x_at(v: float) -> float:
+        return bar_x + v * bar_w
+
+    def arrow(d: str, colour: str = grey) -> str:
+        return f'<path d="{d}" fill="none" stroke="{colour}" stroke-width="2" marker-end="url(#g-head)"/>'
+
+    def box(x, y, w, h, title, sub="", stroke=grey, width=1):
+        return (
+            f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="10" fill="#f7f8fa" stroke="{stroke}" '
+            f'stroke-width="{width}"/>'
+            f'<text x="{x + 16}" y="{y + 30}" class="t">{title}</text>'
+            f'<text x="{x + 16}" y="{y + 52}" class="s">{sub}</text>'
+        )
+
+    def bucket_chip(name: str, cy: int) -> str:
+        return (
+            f'<rect x="930" y="{cy - 15}" width="90" height="30" rx="15" fill="{colours[name]}"/>'
+            f'<text x="975" y="{cy + 5}" class="c">{name}</text>'
+        )
+
+    segments = (
+        (0, pipeline.LO, "reject"),
+        (pipeline.LO, pipeline.HI, "review"),
+        (pipeline.HI, 1, "accept"),
+    )
+    bar = "".join(
+        f'<rect x="{x_at(a)}" y="142" width="{(b - a) * bar_w}" height="10" fill="{colours[n]}"/>'
+        for a, b, n in segments
+    )
+    rows = "".join(
+        f'<rect x="20" y="{y}" width="70" height="8" rx="2" fill="{grey}"/>'
+        for y in range(108, 160, 14)
+    )
+    return f"""
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1040 280"
+ font-family="Geist, system-ui, -apple-system, 'Segoe UI', sans-serif">
+<style>
+ .t {{ font-size: 17px; font-weight: 600; fill: #0a0a0a; }}
+ .s {{ font-size: 13px; fill: {ink}; }}
+ .l {{ font-size: 13px; fill: {ink}; }}
+ .c {{ font-size: 14px; font-weight: 600; fill: #fff; text-anchor: middle; }}
+</style>
+<defs><marker id="g-head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+ orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="{ink}"/></marker></defs>
+<rect x="6" y="90" width="98" height="100" rx="10" fill="#f7f8fa" stroke="{grey}"/>
+{rows}<text x="55" y="182" class="s" text-anchor="middle">rows</text>
+{arrow("M106 140 H146")}
+{box(150, 95, 236, 90, "Code", "normalize · block · exact rules")}
+<text x="166" y="169" class="s">regex · cache</text>
+{arrow("M388 140 C 426 140, 426 40, 464 40 H 924", colours["accept"])}
+<text x="480" y="30" class="l">a rule settles it: yes</text>
+{arrow("M388 140 C 426 140, 426 240, 464 240 H 924", colours["reject"])}
+<text x="480" y="264" class="l">a rule settles it: no</text>
+{arrow("M388 140 H 494", blue)}
+<text x="436" y="130" class="l">the rest</text>
+{box(498, 100, 150, 80, "Jev", f"p = {p:.2f}", blue, 2)}
+{arrow("M650 140 H 694", blue)}
+{box(698, 95, 176, 90, "Thresholds", "")}
+{bar}<line x1="{x_at(p)}" y1="135" x2="{x_at(p)}" y2="159" stroke="#0a0a0a" stroke-width="2.5"/>
+<text x="{x_at(pipeline.LO)}" y="176" class="s" text-anchor="middle">{pipeline.LO:g}</text>
+<text x="{x_at(pipeline.HI)}" y="176" class="s" text-anchor="middle">{pipeline.HI:g}</text>
+{arrow("M876 140 C 900 140, 900 46, 924 46", colours["accept"])}
+{arrow("M876 140 H 924", colours["review"])}
+{arrow("M876 140 C 900 140, 900 234, 924 234", colours["reject"])}
+{bucket_chip("accept", 40)}{bucket_chip("review", 140)}{bucket_chip("reject", 240)}
+</svg>"""
 
 
 def dq_values():
@@ -469,19 +560,11 @@ def dq_choice():
     for value, reply in zip(values, replies, strict=True):
         probabilities = reply.response.choices["code"].probabilities
         p = dq_p(check, value, reply)
-        parts.append(group(f"<b>{html.escape(value)}</b>"))
+        parts.append(group(f"<b>{html.escape(value)}</b>", landing(pipeline.bucket(p))))
         parts += [
             row(code, share)
             for code, share in sorted(probabilities.items(), key=lambda kv: -kv[1])[:2]
         ]
-        parts.append(
-            row(
-                "Fits a code",
-                p,
-                [pipeline.LO, pipeline.HI],
-                outcome=landing(pipeline.bucket(p)),
-            )
-        )
     state, questions = dq.check_request(check, values[-1])
     codes = "".join(
         f"<code>{html.escape(c)}</code><span>{html.escape(d)}</span>"
@@ -753,7 +836,8 @@ STEPS = [
         "System One",
         "A System One model answers a question about your data with a probability",
         "Jev is not a chatbot. One request is data plus a question in plain words, and back comes a "
-        "probability. A PO box is not one building with its own house number. Two shapes of question: "
+        "probability. A street name with its own house number is one building, so the address passes. "
+        "Two shapes of question: "
         "a Noul for yes or no, a Choice to pick one option.",
         system_one,
     ),
