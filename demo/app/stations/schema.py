@@ -48,7 +48,7 @@ with chart:
         ["source_col", "target_col", "gold", "p", "reason"],
         height=180,
         x_title="Jev's confidence in the column it picked",
-        names={"accept": "pre-filled", "review": "to the consultant"},
+        names=results.SCHEMA_NAMES,
     )
     st.caption(
         f"One dot per source column. Right of {schema.CONFIDENT:.2f} the mapping is pre-filled, "

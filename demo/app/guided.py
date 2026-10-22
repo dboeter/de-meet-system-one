@@ -18,9 +18,6 @@ import ui
 from jevdemo import dq, er, pii, pipeline, schema
 from jevdemo.judge import LiveUnavailable, NotRecorded, request_body
 
-DQ_NAMES = {"accept": "passes", "review": "to a person", "reject": "fails"}
-ER_NAMES = {"accept": "merge", "review": "to a person", "reject": "keep apart"}
-SCHEMA_NAMES = {"accept": "pre-filled", "review": "to the consultant"}
 NEUTRAL = "#3d3d3d"
 ROUTE_COLOURS = {
     "excluded": ui.BUCKET_COLOURS["reject"],
@@ -29,54 +26,14 @@ ROUTE_COLOURS = {
     "clear": NEUTRAL,
 }
 BASELINE_GREY = "#8b9099"
-# results.er_baseline() cuts name similarity here; Jev's own cuts are er.LO / er.HI.
-BASELINE_CUTS = (0.50, 0.85)
 
-# stations/pii.py draws a page when imported, so what this page shares with it is copied.
-CATEGORY_NAMES = {
-    "person_name": "Names a person",
-    "health": "Health",
-    "financial": "Finances",
-    "address": "Home address",
-    "special_category": "Other sensitive (Art. 9)",
-}
 ROUTE_LINES = {
     "excluded": "Health or Art. 9 data. The row stays out of gold.",
     "restricted": "Jev found another kind of personal data. It says whether, not where, so the row is restricted.",
     "masked": "Regex found a number. Code knows the span, so it masks it.",
     "clear": "Nothing found. The row goes on as it is.",
 }
-GATE = (
-    "This runs on synthetic notes only. Sending client text to an external API to find PII needs the "
-    "data-residency question settled first: retention, hosting region and the processing agreement."
-)
 
-# The README's station table.
-STATIONS = pd.DataFrame(
-    [
-        (
-            "Semantic data quality",
-            "YAML checks, distinct values, cache",
-            "Does this value pass the check? Which cancel code is this?",
-        ),
-        (
-            "Entity resolution",
-            "Normalize, block, exact KvK/IBAN rule",
-            "Are these two suppliers the same organisation?",
-        ),
-        (
-            "Schema mapping",
-            "Shortlist targets by table and type",
-            "Which target column holds this source column's data?",
-        ),
-        (
-            "PII screening",
-            "Regex with checksums (BSN, IBAN, phone, email)",
-            "Does this note name a person, or reveal health, finances, an address or Art. 9 data?",
-        ),
-    ],
-    columns=["Station", "Code step", "Jev's question"],
-).set_index("Station")
 
 CSS = """
 <style>
@@ -300,7 +257,7 @@ def dq_row(check: dq.Check, value: str, answer) -> str:
         value,
         p,
         [pipeline.LO, pipeline.HI],
-        outcome=landing(pipeline.bucket(p), DQ_NAMES),
+        outcome=landing(pipeline.bucket(p), results.DQ_NAMES),
     )
 
 
@@ -316,15 +273,15 @@ def er_rows(ra: dict, rb: dict, p_same: float) -> str:
         row(
             "Name matching (Levenshtein)",
             er.name_similarity(ra, rb),
-            BASELINE_CUTS,
+            results.BASELINE_CUTS,
             BASELINE_GREY,
-            landing(baseline, ER_NAMES),
+            landing(baseline, results.ER_NAMES),
         ),
         row(
             "Jev",
             p_same,
             [er.LO, er.HI],
-            outcome=landing(pipeline.bucket(p_same, er.LO, er.HI), ER_NAMES),
+            outcome=landing(pipeline.bucket(p_same, er.LO, er.HI), results.ER_NAMES),
         ),
     ) + verdict(
         before=f"Our label: {'same organisation' if same else 'different organisations'}"
@@ -358,7 +315,8 @@ def source_block(s: dict) -> str:
 
 def mapping_line(decided_row: dict) -> str:
     return verdict(
-        landing(decided_row["decision"], SCHEMA_NAMES), after=decided_row["reason"]
+        landing(decided_row["decision"], results.SCHEMA_NAMES),
+        after=decided_row["reason"],
     )
 
 
@@ -368,7 +326,7 @@ def pii_p(answer) -> dict[str, float]:
 
 def pii_bars(p: dict[str, float]) -> str:
     return answers(
-        *(row(CATEGORY_NAMES[c], p[c], [pii.THRESHOLD]) for c in pii.CATEGORIES)
+        *(row(results.CATEGORY_NAMES[c], p[c], [pii.THRESHOLD]) for c in pii.CATEGORIES)
     )
 
 
@@ -425,7 +383,7 @@ def code_and_jev():
         '<div class="g-node"><b>Thresholds</b>lo / hi, yours</div></div></div>'
         f'<span class="g-arrow">→</span><div class="g-buckets">{buckets}</div></div>'
     )
-    st.table(STATIONS)
+    st.table(results.STATIONS)
 
 
 def dq_values():
@@ -497,7 +455,7 @@ def dq_choice():
                 "p_pass = 1 − p(other)",
                 p,
                 [pipeline.LO, pipeline.HI],
-                outcome=landing(pipeline.bucket(p), DQ_NAMES),
+                outcome=landing(pipeline.bucket(p), results.DQ_NAMES),
             )
         )
     state, questions = dq.check_request(check, values[-1])
@@ -548,7 +506,7 @@ def dq_scale():
         ["value", "p_pass", "code", "decision"],
         height=200,
         x_title="Jev's confidence that the value passes",
-        names=DQ_NAMES,
+        names=results.DQ_NAMES,
     )
     st.caption(
         f"One dot per distinct value. Left of {pipeline.LO:.2f} it fails, right of {pipeline.HI:.2f} it passes; "
@@ -619,7 +577,7 @@ def er_scale():
     )
     st.caption(
         "Same candidates, same exact rules. Baseline: Levenshtein similarity on normalized names, "
-        f"≥ {BASELINE_CUTS[1]:.2f} merge, ≤ {BASELINE_CUTS[0]:.2f} keep separate."
+        f"≥ {results.BASELINE_CUTS[1]:.2f} merge, ≤ {results.BASELINE_CUTS[0]:.2f} keep separate."
     )
     compared = pd.DataFrame(scores).T.rename_axis("method").reset_index()
     static_table(
@@ -647,7 +605,7 @@ def er_scale():
         ["pair", "p_same", "decision", "gold"],
         height=160,
         x_title="Jev's confidence that both records are the same supplier",
-        names=ER_NAMES,
+        names=results.ER_NAMES,
     )
     st.caption(
         f"One dot per pair that no exact KvK or IBAN rule settled. Left of {er.LO:.2f} the records "
@@ -737,7 +695,7 @@ def pii_example():
         other = NOTES[nid]["text"]
         probs = pii_p(judge().ask(*pii.screen_request(other)))
         over = [
-            f"{CATEGORY_NAMES[c]} {probs[c]:.2f}"
+            f"{results.CATEGORY_NAMES[c]} {probs[c]:.2f}"
             for c in pii.CATEGORIES
             if probs[c] >= pii.THRESHOLD
         ]
@@ -764,7 +722,7 @@ def pii_scale():
     )
     with st.container(border=True):
         st.markdown("**Before client data**")
-        st.write(GATE)
+        st.write(results.GATE)
 
 
 def your_turn():

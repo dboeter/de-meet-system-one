@@ -8,14 +8,6 @@ from jevdemo.judge import LiveUnavailable, NotRecorded
 
 finding = ui.header("PII screening of free text", "04_pii.ipynb")
 
-CATEGORY_NAMES = {
-    "person_name": "Names a person",
-    "health": "Health",
-    "financial": "Finances",
-    "address": "Home address",
-    "special_category": "Other sensitive (Art. 9)",
-}
-
 notes, hits, rest = results.NOTES, results.HITS, results.UNSETTLED
 probs = results.pii_probs(ui.mode())
 routed = results.pii_routed(probs)
@@ -38,7 +30,7 @@ with chart:
         [
             {
                 "id": i,
-                "category": CATEGORY_NAMES.get(c, c),
+                "category": results.CATEGORY_NAMES.get(c, c),
                 "p": p,
                 "text": next(n["text"] for n in rest if n["id"] == i),
             }
@@ -90,9 +82,8 @@ def closing():
 
     st.subheader("The gate before client data")
     st.markdown(
-        "This runs on synthetic notes only. Sending client text to an external API to find PII needs the "
-        "data-residency question settled first: retention, hosting region and the processing agreement."
-        "\n\n- A regex hit skips Jev, so a note with a phone number and health details is only masked.\n"
+        results.GATE
+        + "\n\n- A regex hit skips Jev, so a note with a phone number and health details is only masked.\n"
         "- Jev says whether a note contains PII, not where. Masking the span is a later step.\n\n"
         "More depth: the jevex demo (`../jevex`) compares regex and Jev on customer-service email."
     )

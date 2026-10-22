@@ -8,6 +8,33 @@ from jevdemo import dq, er, pii, schema
 from jevdemo.pipeline import bucket
 from ui import Claim
 
+# The README's station table.
+STATIONS = pd.DataFrame(
+    [
+        (
+            "Semantic data quality",
+            "YAML checks, distinct values, cache",
+            "Does this value pass the check? Which cancel code is this?",
+        ),
+        (
+            "Entity resolution",
+            "Normalize, block, exact KvK/IBAN rule",
+            "Are these two suppliers the same organisation?",
+        ),
+        (
+            "Schema mapping",
+            "Shortlist targets by table and type",
+            "Which target column holds this source column's data?",
+        ),
+        (
+            "PII screening",
+            "Regex with checksums (BSN, IBAN, phone, email)",
+            "Does this note name a person, or reveal health, finances, an address or Art. 9 data?",
+        ),
+    ],
+    columns=["Station", "Code step", "Jev's question"],
+).set_index("Station")
+
 # --- Data quality ---
 
 ROWS, CHECKS = dq.load_rows(), dq.load_checks()
@@ -17,6 +44,8 @@ CHECK_NAMES = {
     "description_names_product": ("Product description", "product descriptions"),
     "cancel_reason_code": ("Cancel reason", "cancel reasons"),
 }
+# How each station's strip names accept, review and reject.
+DQ_NAMES = {"accept": "passes", "review": "to a person", "reject": "fails"}
 
 
 def check_label(cid: str) -> str:
@@ -65,6 +94,10 @@ def dq_claim(result, first, rerun) -> Claim:
 
 # --- Entity resolution ---
 
+ER_NAMES = {"accept": "merge", "review": "to a person", "reject": "keep apart"}
+# The fuzzy-match baseline cuts name similarity here; Jev's own cuts are er.LO / er.HI.
+BASELINE_CUTS = (0.50, 0.85)
+
 ER_A, ER_B, ER_GOLD = er.load_table("a"), er.load_table("b"), er.load_gold()
 PAIRS = er.candidate_pairs(ER_A, ER_B)
 EXACT = [(ra, rb) for ra, rb in PAIRS if er.exact_match(ra, rb)]
@@ -101,7 +134,7 @@ def er_baseline() -> dict[tuple[str, str], str]:
     return {
         (ra["id"], rb["id"]): "accept"
         if er.exact_match(ra, rb)
-        else bucket(er.name_similarity(ra, rb), 0.50, 0.85)
+        else bucket(er.name_similarity(ra, rb), *BASELINE_CUTS)
         for ra, rb in PAIRS
     }
 
@@ -123,6 +156,8 @@ def er_claim(scores: dict) -> Claim:
 
 
 # --- Schema mapping ---
+
+SCHEMA_NAMES = {"accept": "pre-filled", "review": "to the consultant"}
 
 SOURCES, TARGETS, SCHEMA_GOLD = (
     schema.load_sources(),
@@ -177,6 +212,18 @@ def schema_claim(table: pd.DataFrame, scores: dict) -> Claim:
 
 
 # --- PII screening ---
+
+CATEGORY_NAMES = {
+    "person_name": "Names a person",
+    "health": "Health",
+    "financial": "Finances",
+    "address": "Home address",
+    "special_category": "Other sensitive (Art. 9)",
+}
+GATE = (
+    "This runs on synthetic notes only. Sending client text to an external API to find PII needs the "
+    "data-residency question settled first: retention, hosting region and the processing agreement."
+)
 
 NOTES = pii.load_notes()
 HITS = {n["id"]: pii.regex_hits(n["text"]) for n in NOTES}

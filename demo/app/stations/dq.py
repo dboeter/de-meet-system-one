@@ -59,7 +59,7 @@ with chart:
         [lo, hi],
         ["value", "p_pass", "code", "decision"],
         x_title="Jev's confidence that the value passes",
-        names={"accept": "passes", "review": "to a person", "reject": "fails"},
+        names=results.DQ_NAMES,
     )
     st.caption(
         f"One dot per distinct value. Left of {lo:.2f} it fails, right of {hi:.2f} it passes; "
