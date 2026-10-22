@@ -6,7 +6,13 @@ import pytest
 from streamlit.testing.v1 import AppTest
 
 APP = Path(__file__).resolve().parent.parent / "app" / "streamlit_app.py"
-PAGES = ["stations/dq.py", "stations/er.py", "stations/schema.py", "stations/pii.py"]
+PAGES = [
+    "stations/dq.py",
+    "stations/er.py",
+    "stations/schema.py",
+    "stations/schema_noul.py",
+    "stations/pii.py",
+]
 
 
 @pytest.mark.parametrize("page", PAGES)

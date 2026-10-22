@@ -6,7 +6,7 @@ from collections import Counter
 from pathlib import Path
 
 import yaml
-from typesafe_sdk import Choice
+from typesafe_sdk import Choice, Noul
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 
@@ -25,13 +25,14 @@ TARGET_FAMILY = {
 }
 
 QUESTION = "Which target column holds the same data as `source_column`?"
+BOOL_QUESTION = "Does `source_column` hold the same data as the target column {target}: {description}?"
 
 # Default input of the notebook's live cell; recorded so it also answers offline.
 LIVE_PRESET = {
-    "source_col": "KLANT.KLT_IBAN",
-    "type": "VARCHAR2(34)",
+    "source_col": "KLANT.KLT_PC",
+    "type": "CHAR(7)",
     "comment": "",
-    "samples": ["NL91ABNA0417164300", "NL20INGB0001234567", ""],
+    "samples": ["1012 LG", "3011 AD", "3511 NK", "5611 EB", "2771 AB"],
 }
 
 
@@ -90,6 +91,32 @@ def mapping_request(source: dict, targets: list[dict]):
     return state, {"target": Choice(instructions=QUESTION, criteria=criteria)}
 
 
+def bool_mapping_request(source: dict, targets: list[dict]):
+    """The Choice experiment as one yes/no Noul per shortlisted target, without a `none` option."""
+    state, _ = mapping_request(source, targets)
+    described = {t["target_col"]: f"{t['description']} ({t['type']})" for t in targets}
+    questions = {
+        o: Noul(instructions=BOOL_QUESTION.format(target=o, description=described[o]))
+        for o in shortlist(source, targets)
+        if o != NONE
+    }
+    return state, questions
+
+
+def to_mapping_bool(source: dict, response) -> dict:
+    p_yes = {target: answer.noul for target, answer in response.nouls.items()}
+    best = max(p_yes, key=p_yes.get)
+    if p_yes[best] < CONFIDENT:
+        # No target says yes: map to none, as sure as the strongest yes is weak.
+        return {"source_col": source["source_col"], "target_col": NONE, "p": 1 - p_yes[best]}
+    return {
+        "source_col": source["source_col"],
+        "target_col": best,
+        "p": p_yes[best],
+        "ambiguous": sum(p >= CONFIDENT for p in p_yes.values()) > 1,
+    }
+
+
 def to_mapping(source: dict, response) -> dict:
     choice = response.choices["target"]
     return {
@@ -105,6 +132,8 @@ def decide(mappings: list[dict]) -> list[dict]:
     for m in mappings:
         if m["target_col"] != NONE and claimed[m["target_col"]] > 1:
             reason = "1:1 conflict"
+        elif m.get("ambiguous"):
+            reason = "several targets"
         elif m["p"] < CONFIDENT:
             reason = "low confidence"
         else:
@@ -160,4 +189,8 @@ def sources_yml(rows: list[dict], source_name: str) -> str:
 def requests():
     """Every Jev request the schema-mapping notebook makes."""
     targets = load_targets()
-    return [mapping_request(s, targets) for s in [*load_sources(), LIVE_PRESET]]
+    sources = [*load_sources(), LIVE_PRESET]
+    return [
+        *(mapping_request(s, targets) for s in sources),
+        *(bool_mapping_request(s, targets) for s in sources),
+    ]

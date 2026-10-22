@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import yaml
 
 from jevdemo import schema
@@ -113,3 +115,33 @@ def test_sources_yml_holds_only_accepted_mappings():
     assert table["name"] == "KLANT"
     assert [c["name"] for c in table["columns"]] == ["KLT_NM_VOL"]
     assert table["columns"][0]["meta"]["target"] == "customer.full_name"
+
+
+def nouls(**p_yes):
+    return SimpleNamespace(
+        nouls={t.replace("_", "."): SimpleNamespace(noul=p) for t, p in p_yes.items()}
+    )
+
+
+def test_bool_mapping_asks_one_noul_per_shortlisted_target_without_none():
+    _, questions = schema.bool_mapping_request(column("KLANT.KLT_NR", "NUMBER(10)"), TARGETS)
+
+    assert list(questions) == ["customer.customer_id"]
+
+
+def test_to_mapping_bool_takes_the_strongest_yes_or_none_when_no_target_says_yes():
+    source = column("KLANT.KLT_X", "CHAR(8)")
+
+    one = schema.to_mapping_bool(source, nouls(a_x=0.9, a_y=0.2))
+    several = schema.to_mapping_bool(source, nouls(a_x=0.9, a_y=0.85))
+    nothing = schema.to_mapping_bool(source, nouls(a_x=0.3, a_y=0.1))
+
+    assert (one["target_col"], one["p"], one["ambiguous"]) == ("a.x", 0.9, False)
+    assert several["ambiguous"]
+    assert (nothing["target_col"], nothing["p"]) == ("none", 0.7)
+
+
+def test_ambiguous_bool_mappings_go_to_review():
+    (decided,) = schema.decide([{**mapping("A.X", "t.x", 0.9), "ambiguous": True}])
+
+    assert (decided["decision"], decided["reason"]) == ("review", "several targets")

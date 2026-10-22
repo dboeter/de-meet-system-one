@@ -15,6 +15,7 @@ page = st.navigation(
             st.Page("stations/dq.py", title="Data quality"),
             st.Page("stations/er.py", title="Entity resolution"),
             st.Page("stations/schema.py", title="Schema mapping"),
+            st.Page("stations/schema_noul.py", title="Schema mapping (yes/no)"),
             st.Page("stations/pii.py", title="PII screening"),
         ]
     }

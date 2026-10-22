@@ -109,7 +109,9 @@ with tried:
     st.markdown(
         "- **As specified:** `none` as one of the Choice options. 76% top-1, 60% of columns pre-filled correctly.\n"
         "- Adding generic context to the question: 64% pre-filled correctly.\n"
-        "- Replacing the `none` option with a companion Noul: 36%, because the Noul was under-confident on most columns.\n\n"
+        "- Replacing the `none` option with a companion Noul: 36%, because the Noul was under-confident on most columns.\n"
+        "- One Noul per option instead of a Choice: 24%. The strongest yes is right for 18 of 22 mapped columns, "
+        "but p(yes) rarely reaches 0.80 (see *Schema mapping (yes/no)*).\n\n"
         "The errors are mostly Dutch abbreviations without comments (`LVR`, `VRZ`, `BTW`); "
         "a consultant's abbreviation list is the obvious next lever."
     )
