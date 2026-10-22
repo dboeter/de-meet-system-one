@@ -143,9 +143,10 @@ demo/
   jevdemo/dq.py …         one module per station
   data/*.csv              synthetic sets per station
   checks.yaml             DQ check config
-  checks_variants.yaml    prompt variants of the DQ checks
+  checks_variants.yaml    DQ check wordings that did worse, kept for comparison
   recordings.jsonl
   notebooks/01_dq.ipynb … 04_pii.ipynb
+  notebooks/05_lessons.ipynb  question-wording experiments, recomputed from recordings
   app/streamlit_app.py    Streamlit twin of the notebooks, same package and recordings (`uv run streamlit run app/streamlit_app.py`)
   .streamlit/config.toml  its theme
   scripts/record.py

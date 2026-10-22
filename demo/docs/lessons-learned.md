@@ -2,6 +2,7 @@
 
 We checked every Jev question in the demo against four prompt anti-patterns, tried a fix
 for each one we found, and measured each fix against the old wording on the same data.
+`notebooks/05_lessons.ipynb` recomputes every comparison from the recordings.
 Every number below is from one run on the small synthetic sets (30 DQ rows, 25 source
 columns). A difference of one column or two rows is a hint, not proof.
 
