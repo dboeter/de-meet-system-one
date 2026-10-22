@@ -35,7 +35,7 @@ def mode() -> str:
 
 def presenting() -> bool:
     """Presenter view: the claim, one chart and the live input. Off shows every table and control."""
-    return st.session_state.get("presenting", True)
+    return st.session_state.get("presenting", False)
 
 
 def end_of_presenter_view():
@@ -53,7 +53,7 @@ def sidebar():
     with st.sidebar:
         st.toggle(
             "Presenter view",
-            value=True,
+            value=False,
             key="presenting",
             help="On: the result, one chart and the live input. Off: every table, threshold and request.",
         )
