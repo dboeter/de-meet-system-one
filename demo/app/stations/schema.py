@@ -112,8 +112,7 @@ with tried:
         "- **As first specified** (type suffix, no source system): 76% top-1, 60% pre-filled, one wrong pre-fill.\n"
         "- Adding generic context to the question: 64% pre-filled correctly.\n"
         "- Replacing the `none` option with a companion Noul: 36%, because the Noul was under-confident on most columns.\n"
-        "- One Noul per option instead of a Choice: 24%. The strongest yes is right for 18 of 22 mapped columns, "
-        "but p(yes) rarely reaches 0.80 (see `notebooks/03_schema.ipynb`).\n\n"
+        "\n"
         "The errors are mostly Dutch abbreviations without comments (`VRZ`, `BTW`); "
         "a consultant's abbreviation list is the obvious next lever."
     )

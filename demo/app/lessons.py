@@ -13,9 +13,9 @@ finding = ui.header("Lessons learned: question wording", "05_lessons.ipynb")
 judge = ui.judge(ui.mode())
 
 finding.markdown(
-    "**Clearer wording helped; splitting a Choice into yes/no scores didn't.** Schema mapping "
+    "**Clearer wording helped; splitting the cancel Choice didn't.** Schema mapping "
     "pre-fills one more column right and none wrong, and the address check leaves fewer rows "
-    "for review. Both splits did worse, so neither was adopted."
+    "for review. The split did worse, so it was not adopted."
 )
 
 st.subheader("Schema mapping: where each column landed")
@@ -24,14 +24,6 @@ st.caption(
     "a square that changes colour down a column is a mapping the wording changed."
 )
 st.altair_chart(lessons.outcome_grid(lessons.schema_outcomes(judge)), width="content")
-
-st.subheader("Schema mapping: one yes/no per target")
-st.caption(
-    "The last row above asks a yes/no per shortlisted target instead of one Choice. "
-    "It ranks the right target first for 18 of 22 columns, but rarely says yes firmly "
-    "enough to pre-fill."
-)
-st.altair_chart(lessons.yes_strips(lessons.yes_scores(judge)), width="content")
 
 st.subheader("Data quality: how far apart pass and fail land")
 st.caption(

@@ -26,7 +26,6 @@ Rule 2 was already met everywhere: every question, including the ones with opaqu
 | Schema: both | 1, 4 | 76% top-1, 60% pre-filled, 1 wrong | 80%, 64%, none wrong | yes |
 | DQ address: "one specific building, its own house number" instead of "street + number, optionally postcode/city" | 4 | lowest true row 0.68, 5 rows in review | 0.87, 3 rows | yes |
 | DQ cancel reason: a pass/fail Noul plus a code Choice instead of `1 - p(other)` | 3 | lowest true row 0.94, 1 row in review | 0.67, 7 rows | no |
-| Schema: one yes/no Noul per shortlisted target instead of a Choice, first-version state | 3 | 60% pre-filled, 1 wrong | 24%, 1 wrong | no |
 
 The rejected wordings stay recorded and runnable: `checks_variants.yaml` for DQ,
 `schema.VARIANTS` for schema mapping. Both notebooks show them side by side with the
@@ -59,15 +58,6 @@ from scoring separate blocks of one input. Our cancel check is different: it pic
 few mutually exclusive codes, and the Choice's `other` probability already separated
 pass from fail sharply. The separate Noul was less sure of plain reasons
 (`wachttijd te lang` 0.67, `bezorger kwam niet opdagen` 0.76).
-
-Schema mapping showed the same thing more strongly. Asking one yes/no per shortlisted
-target, a column maps to the target with the strongest yes, or to `none` when no yes
-reaches the 0.80 pre-fill cutoff. The strongest yes is the gold target for 18 of 22 mapped
-columns, so the ranking is mostly right. But only 3 of 22 gold targets reach 0.80, and 8
-more land between 0.70 and 0.80, so nearly every column falls to `none` and goes to review:
-24% pre-filled correctly. The one wrong pre-fill is `ORD_STAT → none` at 0.86: the right
-target, `order.status`, was also its strongest yes, but only at 0.14. Without a `none` option to compete
-against, yes/no scores don't add up to anything, and they ran low.
 
 **Measure the margin, not just accuracy.** Every DQ variant decided all auto-decided rows
 correctly, so accuracy couldn't tell them apart. The gap between the lowest true row and

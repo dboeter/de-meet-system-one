@@ -6,7 +6,7 @@ from collections import Counter
 from pathlib import Path
 
 import yaml
-from typesafe_sdk import Choice, Noul
+from typesafe_sdk import Choice
 
 DATA = Path(__file__).resolve().parent.parent / "data"
 
@@ -38,8 +38,6 @@ VARIANTS = {
     "type_context": {"type_suffix": True},
     "default": {},
 }
-
-BOOL_QUESTION = "Does `source_column` hold the same data as the target column {target}: {description}?"
 
 # Default input of the notebook's live cell; recorded so it also answers offline.
 LIVE_PRESET = {
@@ -117,37 +115,6 @@ def mapping_request(
     return state, {"target": Choice(instructions=QUESTION, criteria=criteria)}
 
 
-def bool_mapping_request(source: dict, targets: list[dict]):
-    """The Choice experiment as one yes/no Noul per shortlisted target, without a `none` option."""
-    # The state it was measured with (no source_system), so its recordings still answer.
-    state, _ = mapping_request(source, targets, context=None)
-    described = {t["target_col"]: f"{t['description']} ({t['type']})" for t in targets}
-    questions = {
-        o: Noul(instructions=BOOL_QUESTION.format(target=o, description=described[o]))
-        for o in shortlist(source, targets)
-        if o != NONE
-    }
-    return state, questions
-
-
-def to_mapping_bool(source: dict, response) -> dict:
-    p_yes = {target: answer.noul for target, answer in response.nouls.items()}
-    best = max(p_yes, key=p_yes.get)
-    if p_yes[best] < CONFIDENT:
-        # No target says yes: map to none, as sure as the strongest yes is weak.
-        return {
-            "source_col": source["source_col"],
-            "target_col": NONE,
-            "p": 1 - p_yes[best],
-        }
-    return {
-        "source_col": source["source_col"],
-        "target_col": best,
-        "p": p_yes[best],
-        "ambiguous": sum(p >= CONFIDENT for p in p_yes.values()) > 1,
-    }
-
-
 def to_mapping(source: dict, response) -> dict:
     choice = response.choices["target"]
     return {
@@ -163,8 +130,6 @@ def decide(mappings: list[dict]) -> list[dict]:
     for m in mappings:
         if m["target_col"] != NONE and claimed[m["target_col"]] > 1:
             reason = "1:1 conflict"
-        elif m.get("ambiguous"):
-            reason = "several targets"
         elif m["p"] < CONFIDENT:
             reason = "low confidence"
         else:
@@ -227,5 +192,4 @@ def requests():
             for kw in VARIANTS.values()
             for s in sources
         ),
-        *(bool_mapping_request(s, targets) for s in sources),
     ]
