@@ -60,7 +60,7 @@ export function parseCorpus(jsonl: string): CorpusItem[] {
   return out;
 }
 
-/** The Jev request for a corpus item, with the station's frozen default wording. */
+/** The Jev request for a corpus item, with the station's default wording. */
 export function corpusRequest(item: CorpusItem, model: string): JevRequest {
   const station = { intent, flags, triage }[item.station];
   const built = station.build({ raw: { text: item.text }, wording: station.defaultWording, model });

@@ -59,38 +59,47 @@ switches to Live if the server has a key, `+`/`−` zoom. The script is in `src/
 
 ## Measured results
 
-Model `jev-1.13.0`, intent recorded 2026-10-20, flags and triage 2026-10-21.
+Model `jev-1.13.0`, recorded 2026-10-21.
 
 **Labelled corpus** (`npm run eval`: 49 intent, 39 flags and 35 triage emails; cases tagged
 ambiguous are excluded, 2 per station). Flags count 5 decisions per email.
 
 | Task | Decisions | Regex | Jev | Gap vs repeat noise |
 |---|---|---|---|---|
-| Intent | 47 | 40% (19) | 96% (45) | +26; noise could move at most 14 |
-| Flags | 190 | 84% (159) | 95% (180), 10 to review, 0 wrong | +21; noise could move at most 18 |
-| Triage: team | 33 | 58% (19) | 97% (32) | +13; noise could move at most 4 |
-| Triage: urgency | 33 | 76% (25) | 94% (31) | +6; noise could move at most 5 |
+| Intent | 47 | 40% (19) | 100% (47) | +28; noise could move at most 14 |
+| Flags | 190 | 84% (159) | 98% (186), 4 to review, 0 wrong | +27; noise could move at most 33 |
+| Triage: team | 33 | 58% (19) | 100% (33) | +14; noise could move at most 4 |
+| Triage: urgency | 33 | 76% (25) | 97% (32) | +7; noise could move at most 4 |
+
+**The question wording was tuned on this corpus.** The first scoring (wording frozen before
+it) gave Jev 96%, 95% with 10 to review, 97% and 94%. The misses came from rubric rules the
+questions did not state, so those rules were copied into the question and option wording, in
+two rounds, and everything was recorded again. There is no held-out set yet; read these
+numbers as fitted, not as an estimate for new emails.
 
 The corpus and its labelling rubric (`data/rubric.md`) were written before the answers were
-scored. Repeat noise is measured per task, on that task's own decision only (an unused
+first scored. Repeat noise is measured per task, on that task's own decision only (an unused
 branch question changing does not count). Every flags and triage case was asked 3 times,
-intent's first 10. Flags: 0 of 39 cases changed (largest probability move 0.08). Triage
-team: 0 of 35. Triage urgency: 1 of 35, `triage-took-twice`, whose urgency score sat at
-1.49–1.54 around the 1.5 cut-off. Intent: 0 of 10 (largest move 0.04). "At most N" is the
-95% upper bound of the flip rate applied to the task's decisions; a flags case that flips
-may flip all 5. Every gap is beyond that bound; triage urgency only just (+6 vs 5).
+intent's first 10. Flags: 2 of 39 cases changed band, each by a small move across a cut-off:
+"Are you a bot?" `wants_human` 0.79–0.82 around 0.8, and "Reverse the charge…"
+`legal_or_chargeback_threat` 0.19–0.22 around 0.2 (largest move 0.07). Triage team: 0 of 35.
+Triage urgency: 0 of 35. Intent: 0 of 10 (largest move 0.16). "At most N" is the 95% upper
+bound of the flip rate applied to the task's decisions; a flags case that flips may flip all
+5, which is why two borderline cases give a bound of 33. Flags' gap is within that bound;
+the other gaps are beyond it.
 Flags are scored with the same
 yes / review / no bands the Flags screen uses; a flag in the review band counts as
 "to review", neither right nor wrong. The session
 that wrote the corpus also ran all 49 intent cases 5× (those run files are not in this repo):
 the same two cases were wrong every time, and one preset's confidence moved from 0.85 to 0.48
-without its answer changing. Treat single-run confidences as approximate.
+without its answer changing (that was with the first wording). Treat single-run confidences
+as approximate.
 
 **Presets** (the examples on each screen):
 
 | Screen | Regex right | Jev right |
 |---|---|---|
-| Intent | 0 of 7 | 6 of 7 |
+| Intent | 0 of 7 | 7 of 7 |
 | Triage (team) | 1 of 4 | 4 of 4 |
 | Keep your regex | 0 of 3 (first match) | 3 of 3 |
 | Scan (sentences) | 4 of 9 | 9 of 9 |
@@ -100,13 +109,14 @@ estimate; the corpus is.
 
 Where Jev is wrong or unsure, the demo shows it:
 
-- Intent, "Can I get my money back if it's still sealed?": Jev answers `refund` (0.94); the
-  label is `question`. Shown with a ✗ in free play; not in the guided script.
-- Intent corpus, "Can you repair it under warranty?": Jev answers `other`; the label is
-  `exchange`. The `exchange` option's description does not mention repair. The wording was
-  frozen before the corpus was scored and has not been tuned on it.
-- Flags, "Third time writing…": `wants_human` is 0.74, in the review band with the default
-  thresholds. "Not a lawyer": `cancellation_risk` 0.23, also review.
+- Flags, "Third time writing…": `wants_human` is 0.72, in the review band with the default
+  thresholds.
+- Flags corpus, still to review: "We spoke on the phone yesterday…" (`repeat_contact` 0.71),
+  "My lawyer will be in touch unless you refund the full amount" (`asks_refund_now` about
+  0.5) and "Reverse the charge on my card…" (`legal_or_chargeback_threat` about 0.2, on the
+  cut-off).
+- Triage corpus, "The login code never arrived on my phone, so I'm locked out.": Jev says
+  urgent (1.62); the label is not urgent.
 
 ## Limits
 

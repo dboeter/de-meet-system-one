@@ -53,8 +53,9 @@ The question is the Intent station's, word for word (`src/core/stations/intent.t
 
 ## Flags
 
-Written before any Flags gold label. The questions are the Flags station's, word for word
-(`src/core/stations/flags.ts`). Each flag is labelled on its own: `true` when the question's
+Written before any Flags gold label. The questions are the Flags station's
+(`src/core/stations/flags.ts`); after the first scoring, rules 2–6 below were copied into
+their wording. Each flag is labelled on its own: `true` when the question's
 answer is yes for this email.
 
 | Flag | True when |

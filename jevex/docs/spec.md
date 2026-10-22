@@ -214,7 +214,9 @@ data/
   `server/` and `scripts/` import `TypeSafeClient`.
 - **Question wording** for stations 2, 3 and 5 (Noul instructions, Score levels, the
   per-sentence Noul) is drafted and iterated during recording, written as what the writer
-  does ("the customer asks, now, to get money back"), and frozen before the corpus eval.
+  does ("the customer asks, now, to get money back"), and frozen before the first corpus
+  eval. The rubric rules behind the first misses were then copied into the wording (see the
+  README's Measured results), so the corpus is no longer held out.
   Any wording change changes the recording key, so it means re-recording.
 - **Recording key:** SHA-256 of `{model, state, questions}` in canonical JSON. A lookup
   miss in recorded mode shows "not recorded — switch to Live" rather than guessing.
