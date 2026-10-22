@@ -14,6 +14,7 @@ from jevdemo.pipeline import HI, LO, bucket
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data" / "dq_rows.csv"
 CHECKS = ROOT / "checks.yaml"
+CHECK_VARIANTS = ROOT / "checks_variants.yaml"
 
 # Default input of the notebook's live cell; recorded so it also answers offline.
 LIVE_PRESET = "Achter de kerk, het witte huis"
@@ -28,6 +29,8 @@ class Check:
     max_fail_rate: float
     action: Literal["warn", "quarantine", "fail_run"]
     codes: dict[str, str] | None = None
+    # Choice only: set → split into a pass Noul plus a code Choice.
+    question: str | None = None
 
 
 @dataclass(frozen=True)
@@ -93,22 +96,32 @@ def distinct_values(rows: list[dict], column: str) -> list[str]:
 
 def check_request(check: Check, value: str):
     state = {"column": check.column, "value": value}
-    if check.kind == "choice":
-        questions = {
+    passes = Noul(
+        instructions=f"Does `value` from column `{check.column}` pass this check: it {check.check}?"
+    )
+    if check.kind == "noul":
+        return state, {"passes": passes}
+    if check.question is None:
+        return state, {
             "code": Choice(instructions=check.check, criteria=check.codes or {})
         }
-    else:
-        instructions = f"Does `value` from column `{check.column}` pass this check: it {check.check}?"
-        questions = {"passes": Noul(instructions=instructions)}
-    return state, questions
+    codes = check.codes or {}
+    state["codes"] = {code: d for code, d in codes.items() if code != "other"}
+    return state, {
+        "passes": passes,
+        "code": Choice(instructions=check.question, criteria=codes),
+    }
 
 
 def to_judgment(check: Check, value: str, response) -> Judgment:
     if check.kind == "choice":
         answer = response.choices["code"]
-        return Judgment(
-            check.id, value, 1 - answer.probabilities["other"], answer.choice
+        p_pass = (
+            1 - answer.probabilities["other"]
+            if check.question is None
+            else response.nouls["passes"].noul
         )
+        return Judgment(check.id, value, p_pass, answer.choice)
     return Judgment(check.id, value, response.nouls["passes"].noul)
 
 
@@ -140,7 +153,11 @@ def requests():
     rows, checks = load_rows(), load_checks()
     address = address_check(checks)
     return [
-        *(check_request(c, v) for c in checks for v in distinct_values(rows, c.column)),
+        *(
+            check_request(c, v)
+            for c in [*checks, *load_checks(CHECK_VARIANTS)]
+            for v in distinct_values(rows, c.column)
+        ),
         check_request(address, LIVE_PRESET),
     ]
 

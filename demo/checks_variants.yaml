@@ -1,0 +1,37 @@
+# Prompt variants of checks.yaml, compared against it in notebooks/01_dq.ipynb.
+# Same ids, so the notebook's labels apply to both; never share a Cache between the two files.
+#
+# A Choice check with a `question` is split: the Choice (`question`) only picks the code, and a
+# separate Noul on `check` scores pass/fail, with the code descriptions in state as `codes`.
+
+checks:
+  # Names the property the labels encode (one premises, its own house number) instead of
+  # the address's surface parts.
+  - id: address_is_postal
+    column: address
+    kind: noul
+    check: identifies one specific building by its street name and its own house number
+    max_fail_rate: 0.50
+    action: quarantine
+
+  - id: description_names_product
+    column: product_description
+    kind: noul
+    check: describes the product itself, not a pointer elsewhere such as "zie mail" or "idem"
+    max_fail_rate: 0.10
+    action: fail_run
+
+  - id: cancel_reason_code
+    column: cancel_reason
+    kind: choice
+    check: gives a cancellation reason that fits one of `codes`
+    question: Which cancellation code does `value` describe?
+    codes:
+      TOO_EXPENSIVE: price too high, or a cheaper alternative
+      DELIVERY_LATE: delivery late, missed or too slow
+      WRONG_OR_DAMAGED: wrong item, size or colour, or damaged on arrival
+      NO_LONGER_NEEDED: need disappeared, duplicate order, project or budget stopped
+      SWITCHED_SUPPLIER: moved to another supplier or contract
+      other: none of the codes fit, or no reason given
+    max_fail_rate: 0.30
+    action: warn

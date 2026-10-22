@@ -25,6 +25,19 @@ TARGET_FAMILY = {
 }
 
 QUESTION = "Which target column holds the same data as `source_column`?"
+# Prompt variants: what a consultant knows about the source system, and whether option
+# descriptions carry the target type (the shortlist already filters on type).
+SOURCE_SYSTEM = (
+    "A Dutch legacy ERP. Table and column names are abbreviated Dutch words; "
+    "comments and sample values are Dutch."
+)
+VARIANTS = {
+    "baseline": {},
+    "no_type": {"type_suffix": False},
+    "context": {"context": SOURCE_SYSTEM},
+    "no_type_context": {"type_suffix": False, "context": SOURCE_SYSTEM},
+}
+
 BOOL_QUESTION = "Does `source_column` hold the same data as the target column {target}: {description}?"
 
 # Default input of the notebook's live cell; recorded so it also answers offline.
@@ -74,8 +87,18 @@ def shortlist(source: dict, targets: list[dict]) -> list[str]:
     return [*options, NONE]
 
 
-def mapping_request(source: dict, targets: list[dict]):
-    described = {t["target_col"]: f"{t['description']} ({t['type']})" for t in targets}
+def mapping_request(
+    source: dict,
+    targets: list[dict],
+    type_suffix: bool = True,
+    context: str | None = None,
+):
+    described = {
+        t["target_col"]: f"{t['description']} ({t['type']})"
+        if type_suffix
+        else t["description"]
+        for t in targets
+    }
     criteria = {
         o: described.get(o, "No target column holds this data")
         for o in shortlist(source, targets)
@@ -88,6 +111,8 @@ def mapping_request(source: dict, targets: list[dict]):
             "samples": [s for s in source["samples"] if s],
         }
     }
+    if context:
+        state["source_system"] = context
     return state, {"target": Choice(instructions=QUESTION, criteria=criteria)}
 
 
@@ -108,7 +133,11 @@ def to_mapping_bool(source: dict, response) -> dict:
     best = max(p_yes, key=p_yes.get)
     if p_yes[best] < CONFIDENT:
         # No target says yes: map to none, as sure as the strongest yes is weak.
-        return {"source_col": source["source_col"], "target_col": NONE, "p": 1 - p_yes[best]}
+        return {
+            "source_col": source["source_col"],
+            "target_col": NONE,
+            "p": 1 - p_yes[best],
+        }
     return {
         "source_col": source["source_col"],
         "target_col": best,
@@ -191,6 +220,10 @@ def requests():
     targets = load_targets()
     sources = [*load_sources(), LIVE_PRESET]
     return [
-        *(mapping_request(s, targets) for s in sources),
+        *(
+            mapping_request(s, targets, **kw)
+            for kw in VARIANTS.values()
+            for s in sources
+        ),
         *(bool_mapping_request(s, targets) for s in sources),
     ]

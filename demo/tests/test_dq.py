@@ -116,3 +116,43 @@ def test_choice_passes_with_one_minus_other():
     judgment = dq.to_judgment(check, "te laat", response)
     assert judgment.code == "LATE"
     assert abs(judgment.p_pass - 0.8) < 1e-9
+
+
+def test_split_choice_scores_pass_with_its_own_noul_and_codes_in_state():
+    check = dq.Check(
+        id="reason",
+        column="cancel_reason",
+        kind="choice",
+        check="gives a reason that fits one of `codes`",
+        question="Which code?",
+        max_fail_rate=0.3,
+        action="warn",
+        codes={"LATE": "late", "other": "none fit"},
+    )
+    state, questions = dq.check_request(check, "te laat")
+    response = SystemOneResponse.model_validate(
+        {
+            "model": "jev-1.13.0",
+            "usage": {"input_tokens": 1, "output_tokens": 1},
+            "answers": {
+                "passes": {"type": "noul", "noul": 0.7},
+                "code": {
+                    "type": "choice",
+                    "choice": "LATE",
+                    "confidence": 0.6,
+                    "probabilities": {"LATE": 0.8, "other": 0.2},
+                },
+            },
+        }
+    )
+    judgment = dq.to_judgment(check, "te laat", response)
+
+    assert state["codes"] == {"LATE": "late"}
+    assert set(questions) == {"passes", "code"}
+    assert (judgment.code, judgment.p_pass) == ("LATE", 0.7)
+
+
+def test_variant_checks_keep_the_baseline_ids():
+    assert [c.id for c in dq.load_checks(dq.CHECK_VARIANTS)] == [
+        c.id for c in dq.load_checks()
+    ]

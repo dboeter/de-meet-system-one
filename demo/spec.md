@@ -44,6 +44,11 @@ synthetic rows → code step (normalize / block / regex / shortlist / dedupe)
   `warn | quarantine | fail_run`); distinct values first; cache by `(check_id, value_hash)`.
 - **Jev:** one Noul per distinct value per check; a Choice over the code list plus
   `other/none` for `cancel_reason`.
+- **Prompt variants:** `checks_variants.yaml`, same ids, compared in the notebook. Naming the
+  property the labels encode in the address check (one building, its own house number)
+  lifted the lowest true row from 0.68 to 0.87 and cut review from 5 to 3 rows. Splitting the
+  cancel check into a pass Noul plus a code Choice did worse: review 1 → 7 rows, lowest true
+  row 0.94 → 0.67; `1 - p(other)` stays.
 - **Output:** per-row pass probability and flag, quarantine table, run-manifest fail rate;
   one column crosses its threshold and `fail_run` fires. Show cache hits on a rerun.
 - **Live input:** a value plus a plain-language check.
@@ -78,6 +83,10 @@ synthetic rows → code step (normalize / block / regex / shortlist / dedupe)
   mapping is pre-filled (`ORD_BTW_BDR → none` at 0.86). Shortlist recall is 100% by
   construction (every type-compatible column of the declared tables), so it measures the
   table mapping, not a ranking.
+- **Prompt variants** (`schema.VARIANTS`, one run each): dropping the `(type)` suffix from
+  option descriptions gives 64% pre-filled and removes the wrong pre-fill; the source system
+  in state gives 80% top-1 but 60% pre-filled; both together 80% top-1, 64% pre-filled, no
+  wrong pre-fill. Still below 70%.
 
 ### 4. PII screening
 
@@ -132,6 +141,7 @@ demo/
   jevdemo/dq.py …         one module per station
   data/*.csv              synthetic sets per station
   checks.yaml             DQ check config
+  checks_variants.yaml    prompt variants of the DQ checks
   recordings.jsonl
   notebooks/01_dq.ipynb … 04_pii.ipynb
   app/streamlit_app.py    Streamlit twin of the notebooks, same package and recordings (`uv run streamlit run app/streamlit_app.py`)

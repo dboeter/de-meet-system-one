@@ -124,7 +124,9 @@ def nouls(**p_yes):
 
 
 def test_bool_mapping_asks_one_noul_per_shortlisted_target_without_none():
-    _, questions = schema.bool_mapping_request(column("KLANT.KLT_NR", "NUMBER(10)"), TARGETS)
+    _, questions = schema.bool_mapping_request(
+        column("KLANT.KLT_NR", "NUMBER(10)"), TARGETS
+    )
 
     assert list(questions) == ["customer.customer_id"]
 
@@ -145,3 +147,16 @@ def test_ambiguous_bool_mappings_go_to_review():
     (decided,) = schema.decide([{**mapping("A.X", "t.x", 0.9), "ambiguous": True}])
 
     assert (decided["decision"], decided["reason"]) == ("review", "several targets")
+
+
+def test_mapping_variants_drop_the_type_suffix_and_add_source_context():
+    source = column("KLANT.KLT_NR", "NUMBER(10)")
+    base_state, base = schema.mapping_request(source, TARGETS)
+    state, variant = schema.mapping_request(
+        source, TARGETS, type_suffix=False, context="ERP"
+    )
+
+    assert base["target"].criteria["customer.customer_id"].endswith("(integer)")
+    assert not variant["target"].criteria["customer.customer_id"].endswith("(integer)")
+    assert "source_system" not in base_state
+    assert state["source_system"] == "ERP"
