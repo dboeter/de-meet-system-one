@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { parseRules } from "../../core/regex.ts";
 import { readScan, scan, scanRegex, splitSentences, type ScanPreset } from "../../core/stations/scan.ts";
-import { Answer, Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, RulesEditor, Slider, StationHeader, Verdict } from "../components.tsx";
+import { Answer, Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, RulesEditor, StationHeader, Verdict } from "../components.tsx";
 import { useJev } from "../useJev.ts";
 import { startPreset, type ViewProps } from "../start.ts";
 
@@ -10,7 +10,7 @@ export function ScanView(props: ViewProps) {
   const [text, setText] = useState(initial?.text ?? "");
   const [preset, setPreset] = useState<ScanPreset | undefined>(initial);
   const [rulesText, setRulesText] = useState<string>(scan.defaultRules);
-  const [threshold, setThreshold] = useState<number>(scan.defaultThreshold);
+  const threshold = scan.defaultThreshold;
   const jev = useJev(scan);
 
   useEffect(() => {
@@ -30,7 +30,7 @@ export function ScanView(props: ViewProps) {
       <StationHeader
         title="Scan"
         code="noul per sentence"
-        blurb="Which sentences in a long email need action? Code splits the sentences; one request asks a yes/no question per sentence. Slide the threshold: the answers are already in, so nothing is asked again."
+        blurb="Which sentences in a long email need action? Code splits the sentences; one request asks a yes/no question per sentence."
       />
       <PresetChips
         presets={scan.presets}
@@ -81,7 +81,6 @@ export function ScanView(props: ViewProps) {
               const rows = readScan(ok.response, sent, threshold);
               return (
                 <>
-                  <Slider label="Threshold" value={threshold} onChange={setThreshold} />
                   <div className="answer-line">
                     {rows.filter((r) => r.needsAction).length} of {rows.length} sentences need action
                   </div>

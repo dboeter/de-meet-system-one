@@ -229,27 +229,6 @@ export function ProbBars(props: { rows: readonly { label: string; p: number; cho
   );
 }
 
-export function Slider(props: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number }) {
-  const id = useId();
-  const { presenting } = useDemo();
-  if (presenting) return null;
-  return (
-    <div className="slider">
-      <label htmlFor={id}>{props.label}</label>
-      <input
-        id={id}
-        type="range"
-        min={props.min ?? 0}
-        max={props.max ?? 1}
-        step={props.step ?? 0.01}
-        value={props.value}
-        onChange={(e) => props.onChange(Number(e.target.value))}
-      />
-      <output htmlFor={id}>{props.value.toFixed(2)}</output>
-    </div>
-  );
-}
-
 type OkResult = Extract<JevResult, { kind: "ok" }>;
 
 function formatUsd(usd: number): string {

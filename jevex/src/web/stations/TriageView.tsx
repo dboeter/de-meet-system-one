@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { parseRules } from "../../core/regex.ts";
 import { route, triage, triageRegex, type TriagePath, type TriagePreset, type TriageThresholds } from "../../core/stations/triage.ts";
-import { Answer, Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, ProbBars, RulesEditor, Slider, StationHeader, Verdict } from "../components.tsx";
+import { Answer, Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, ProbBars, RulesEditor, StationHeader, Verdict } from "../components.tsx";
 import { useDemo } from "../demo.tsx";
 import { useJev } from "../useJev.ts";
 import { startPreset, type ViewProps } from "../start.ts";
@@ -38,7 +38,7 @@ export function TriageView(props: ViewProps) {
   const [preset, setPreset] = useState<TriagePreset | undefined>(initial);
   const [rulesText, setRulesText] = useState<string>(triage.defaultRules);
   const [urgencyText, setUrgencyText] = useState<string>(triage.defaultUrgencyRule);
-  const [t, setT] = useState<TriageThresholds>(triage.defaultThresholds);
+  const t: TriageThresholds = triage.defaultThresholds;
   const { presenting } = useDemo();
   const jev = useJev(triage);
 
@@ -124,10 +124,7 @@ export function TriageView(props: ViewProps) {
                     {r.urgency.toFixed(2)} / 2 <Verdict correct={gold ? r.urgent === gold.urgent : undefined} />
                   </div>
                   <ProbBars rows={r.departments.map((d) => ({ ...d, chosen: d.label === team }))} />
-                  <Slider label="Route if confidence ≥" value={t.minConfidence} onChange={(v) => setT({ ...t, minConfidence: v })} />
                   {!presenting && <div className="muted small">department confidence {r.confidence.toFixed(2)}</div>}
-                  <Slider label="Copy team if p >" value={t.copyAbove} onChange={(v) => setT({ ...t, copyAbove: v })} />
-                  <Slider label="Urgent if score ≥" value={t.urgentAt} min={0} max={2} onChange={(v) => setT({ ...t, urgentAt: v })} />
                 </>
               );
             }}

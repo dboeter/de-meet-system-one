@@ -218,8 +218,8 @@ P_COLUMN = st.column_config.ProgressColumn(format="%.2f", min_value=0, max_value
 
 
 def marked(value: str, right: bool | None) -> str:
-    """An answer with a green or red mark for right or wrong; `None` (a review) stays unmarked."""
-    return value if right is None else f"{'🟢' if right else '🔴'} {value}"
+    """An answer with a green check for right or a red cross for wrong; `None` (a review) stays unmarked."""
+    return value if right is None else f"{'✅' if right else '❌'} {value}"
 
 
 def er_verdict(decision: str, same: bool) -> str:

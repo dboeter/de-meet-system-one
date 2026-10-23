@@ -3,7 +3,6 @@ import { parseRules } from "../../core/regex.ts";
 import { FLAGS, flags, flagsRegex, readFlags, type Flag, type FlagsPreset } from "../../core/stations/flags.ts";
 import type { BandThresholds } from "../../core/thresholds.ts";
 import { Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, RulesEditor, StationHeader, Verdict } from "../components.tsx";
-import { useDemo } from "../demo.tsx";
 import { useJev } from "../useJev.ts";
 import { startPreset, type ViewProps } from "../start.ts";
 
@@ -15,9 +14,8 @@ export function FlagsView(props: ViewProps) {
   const [preset, setPreset] = useState<FlagsPreset | undefined>(initial);
   const [rulesText, setRulesText] = useState<string>(flags.defaultRules);
   // One review band for all five flags; the defaults are the same for each.
-  const [band, setBand] = useState<BandThresholds>(flags.defaultThresholds[FLAGS[0]]);
+  const band: BandThresholds = flags.defaultThresholds[FLAGS[0]];
   const thresholds = Object.fromEntries(FLAGS.map((f) => [f, band])) as Record<Flag, BandThresholds>;
-  const { presenting } = useDemo();
   const jev = useJev(flags);
 
   useEffect(() => {
@@ -28,16 +26,13 @@ export function FlagsView(props: ViewProps) {
   const rules = parseRules(rulesText);
   const hits = rules.kind === "ok" ? flagsRegex(rules.rules, text) : null;
 
-  // Keep no ≤ yes so the review band never inverts.
-  const setThreshold = (key: keyof BandThresholds, v: number) =>
-    setBand((cur) => (key === "no" ? { no: Math.min(v, cur.yes), yes: cur.yes } : { no: cur.no, yes: Math.max(v, cur.no) }));
 
   return (
     <>
       <StationHeader
         title="Flags"
         code="noul × 5"
-        blurb="Several things can be true of one email. One request asks five yes/no questions; each answer lands in yes, review or no, and moving the band never asks Jev again."
+        blurb="Several things can be true of one email. One request asks five yes/no questions; each answer lands in yes, review or no."
       />
       <PresetChips
         presets={flags.presets}
@@ -87,20 +82,6 @@ export function FlagsView(props: ViewProps) {
         jev={
           <>
           <JevQuestion>Five yes/no questions in one request. Between the two thresholds, a person reviews.</JevQuestion>
-          {!presenting && (
-            <div className="band-sliders shared">
-              <label>
-                no ≤
-                <input type="range" min={0} max={1} step={0.01} value={band.no} aria-label="no threshold" onChange={(e) => setThreshold("no", Number(e.target.value))} />
-                <output>{band.no.toFixed(2)}</output>
-              </label>
-              <label>
-                yes ≥
-                <input type="range" min={0} max={1} step={0.01} value={band.yes} aria-label="yes threshold" onChange={(e) => setThreshold("yes", Number(e.target.value))} />
-                <output>{band.yes.toFixed(2)}</output>
-              </label>
-            </div>
-          )}
           <JevOutcome result={jev.result}>
             {(ok) => (
               <ul className="flag-list jev-flags">

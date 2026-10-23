@@ -92,8 +92,7 @@ the baseline regex, the Jev questions, the presets, and what the presenter says.
   "Third time writing about this" (repeat contact with no keyword; `wants_human` in the
   review band), "My manager asked me to
   order 40 more" (regex fires on `manager`).
-- **Shows:** one threshold pair for all five flags (`no < p < yes` = review band). Moving
-  the sliders re-colours the results without a new request.
+- **Shows:** one fixed threshold pair for all five flags (`no < p < yes` = review band).
 
 ### 3. Triage — route with confidence gating
 
@@ -131,8 +130,8 @@ the baseline regex, the Jev questions, the presets, and what the presenter says.
 - **Primitive:** one Noul per sentence, all in one request. Sentences come from a simple
   splitter in code.
 - **Regex baseline:** sentences matching a "problem words" pattern.
-- **Shows:** the ex-regex scan view: every sentence with its probability bar, a threshold
-  slider, matching sentences highlighted. Preset: the mixed ticket (thanks + wrong charger +
+- **Shows:** the ex-regex scan view: every sentence with its probability bar against a fixed
+  threshold, matching sentences highlighted. Preset: the mixed ticket (thanks + wrong charger +
   request + FYI + complaint + praise).
 
 ### 6. Scoreboard — both, over the whole corpus
@@ -169,7 +168,7 @@ Modelled on the ex-regex playground screenshot.
      station 4, Jev's pick) marked on the text. The preset's expected answer beside it.
      Ask button and `Ctrl+Enter`.
   2. **Jev (the wider column):** the plain-English question asked, the answer, probability
-     bars for every option or flag, threshold slider(s), the code path taken (for
+     bars for every option or flag, the code path taken (for
      station 3), a ✗/✓ badge against the preset's gold label.
   3. **Regex:** one line on what the baseline does, its verdict with the same badge, and
      the pattern (editable) collapsed under it.
@@ -181,10 +180,10 @@ Modelled on the ex-regex playground screenshot.
 - **Projector-friendly:** base font ≥ 18 px, a "presenter" zoom (`+`/`-`), high-contrast
   light theme matching the Streamlit demo's (`demo/.streamlit/config.toml`), no hover-only
   information.
-- **Guided mode is a slide:** it hides the left nav, preset chips, sliders, the collapsed
+- **Guided mode is a slide:** it hides the left nav, preset chips, the collapsed
   pattern and wording, and Request/Response/Code. Ask appears once the presenter types,
   or on the blank live box.
-- **Thresholds never re-ask:** moving a slider recomputes from stored probabilities.
+- **No threshold sliders:** thresholds are fixed at each station's defaults.
 - **Editable meaning (live mode):** in free play the Jev column's instructions and
   option descriptions are editable, the counterpart of editing the regex. Rewording
   re-asks Jev. In recorded mode they are locked to the recorded wording.
