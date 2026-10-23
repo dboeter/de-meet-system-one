@@ -1,4 +1,4 @@
-"""Live measurements for spec.md: Choice option cap, latency, throughput, cost.
+"""Live measurements for docs/spec.md: Choice option cap, latency, throughput, cost.
 
 Calls the API; nothing is recorded. Run: uv run python scripts/measure.py
 """

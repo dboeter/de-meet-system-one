@@ -12,7 +12,7 @@ DATA = Path(__file__).resolve().parent.parent / "data"
 
 # Declared by the consultant: which target tables a source table can feed.
 TABLES = {"KLANT": ["customer"], "ORDER": ["order", "invoice"]}
-MAX_OPTIONS = 255  # measured Choice cap (spec.md, Measured during the build)
+MAX_OPTIONS = 255  # measured Choice cap (docs/spec.md, Measured during the build)
 CONFIDENT = 0.80
 NONE = "none"
 

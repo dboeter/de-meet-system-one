@@ -78,7 +78,7 @@ top to bottom, and that every app page renders, including its live preset.
 
 ## More
 
-- `spec.md`: decisions, the station designs, and what was measured during the build.
+- `docs/spec.md`: decisions, the station designs, and what was measured during the build.
 - `docs/use-cases.md`: the use cases the stations come from.
 - `docs/lessons-learned.md`: what changing the question wording did, and what we learned (also a page in the app).
 - `checks.yaml`: the DQ checks, written as config in plain language.

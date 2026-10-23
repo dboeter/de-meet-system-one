@@ -25,3 +25,8 @@ Setup, live mode and tests are in [demo/README.md](demo/README.md).
 | `System_One_Models_DIP_v3.pptx` | The slide deck | |
 
 If you only look at one thing, look at `demo/`.
+
+## Disclaimer
+
+This repository was largely built with AI and is for demo purposes only.
+All data in it is synthetic, generated with AI. Any resemblance to real people or organisations is coincidental.
