@@ -1,6 +1,7 @@
 # DE Meet: System One
 
-Demos and slides from the Digital Power talk on Jev (TypeSafe's System One model) for data engineers.
+Demos and slides from the Digital Power talk on System One models in data engineering.
+The demos use Jev, [TypeSafe](https://typesafe.ai)'s System One model.
 
 ## Start here: [`demo/`](demo/)
 
