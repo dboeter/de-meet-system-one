@@ -116,7 +116,11 @@ with st.expander("Details"):
     )
     with matched:
         st.dataframe(
-            table.sort_values("p_same", ascending=False),
+            table.sort_values("p_same", ascending=False)
+            .assign(
+                decision=lambda t: list(map(ui.er_verdict, t["decision"], t["gold"]))
+            )
+            .drop(columns="gold"),
             hide_index=True,
             column_config={"p_same": ui.P_COLUMN},
         )
@@ -126,14 +130,13 @@ with st.expander("Details"):
                 [
                     {
                         "pair": f"{names[x]} | {names[y]}",
-                        "gold": (x, y) in gold,
-                        "Levenshtein": fuzzy[(x, y)],
-                        "Jev": jev[(x, y)],
+                        "Levenshtein": ui.er_verdict(fuzzy[(x, y)], (x, y) in gold),
+                        "Jev": ui.er_verdict(jev[(x, y)], (x, y) in gold),
                     }
                     for x, y in jev
                     if fuzzy[(x, y)] != jev[(x, y)]
                 ],
-                columns=["pair", "gold", "Levenshtein", "Jev"],
+                columns=["pair", "Levenshtein", "Jev"],
             ),
             hide_index=True,
         )

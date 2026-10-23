@@ -215,3 +215,15 @@ def percent(x: float) -> str:
 
 
 P_COLUMN = st.column_config.ProgressColumn(format="%.2f", min_value=0, max_value=1)
+
+
+def marked(value: str, right: bool | None) -> str:
+    """An answer with a green or red mark for right or wrong; `None` (a review) stays unmarked."""
+    return value if right is None else f"{'🟢' if right else '🔴'} {value}"
+
+
+def er_verdict(decision: str, same: bool) -> str:
+    """A merge decision marked against gold; review is no call, so it gets no mark."""
+    return marked(
+        decision, None if decision == "review" else (decision == "accept") == same
+    )

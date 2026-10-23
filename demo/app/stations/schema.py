@@ -81,6 +81,11 @@ def your_turn():
             )
 
 
+shown = (
+    table.assign(target_col=list(map(ui.marked, table["target_col"], table["correct"])))
+    .drop(columns="correct")
+    .rename(columns={"gold": "right answer"})
+)
 with st.expander("Details"):
     mapping, wrong, yml, tried, data = st.tabs(
         [
@@ -92,13 +97,13 @@ with st.expander("Details"):
         ]
     )
     with mapping:
-        st.dataframe(table, hide_index=True, column_config={"p": ui.P_COLUMN})
+        st.dataframe(shown, hide_index=True, column_config={"p": ui.P_COLUMN})
     with wrong:
         st.caption(
             "A wrong answer in review costs a minute. A wrong answer that was accepted is the expensive kind."
         )
         st.dataframe(
-            table[~table["correct"]], hide_index=True, column_config={"p": ui.P_COLUMN}
+            shown[~table["correct"]], hide_index=True, column_config={"p": ui.P_COLUMN}
         )
     with yml:
         st.caption("Only accepted mappings; review rows are left out.")
