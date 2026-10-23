@@ -6,7 +6,6 @@ the tests rely on, and the current step lives only in the URL (`?step=N`).
 
 import base64
 import html
-import json
 import re
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -241,8 +240,8 @@ def judge():
     return ui.judge(ui.mode())
 
 
-def example(top: str, state, questions):
-    """The question on the left with the answers under it, the request on the right.
+def example(top: str, state, questions, answer):
+    """The question on the left with the answers under it, the request and Jev's answer on the right.
 
     The left column is returned with `top` in it, so the answers land right under their question.
     """
@@ -253,12 +252,11 @@ def example(top: str, state, questions):
         st.html(label("The request"))
         body = request_body(state, questions)
         body.pop("model")  # the same on every step; the room reads state and questions
-        st.code(
-            json.dumps(body, indent=2, ensure_ascii=False),
-            language=None,  # plain ink, as in ui.request_view
-            wrap_lines=True,
-            height=480,
-        )
+        ui.json_view(body, height=480)
+        st.html(label("The answer"))
+        reply = answer.response.model_dump(mode="json")
+        reply.pop("model")
+        ui.json_view(reply)
     return left
 
 
@@ -384,7 +382,7 @@ def system_one():
     state, questions = dq.check_request(check, value)
     answer = judge().ask(state, questions)
     # Everything reads down the left column, next to the request: answer, question kinds, then cost.
-    with example(quote(questions["passes"].instructions), state, questions):
+    with example(quote(questions["passes"].instructions), state, questions, answer):
         st.html(answers(head("Value"), dq_row(check, value, answer)))
         st.html(
             label("Two kinds of question") + '<div class="g-cards g-stack">'
@@ -541,7 +539,7 @@ def dq_values():
         parts += [group(quote(asks["passes"].instructions, small=True)), head("Value")]
         parts += [dq_row(check, v, replies[(cid, v)]) for v in examples[cid]]
     state, questions = dq.check_request(checks[shown[0]], shown[1])
-    with example("", state, questions):
+    with example("", state, questions, replies[shown]):
         st.html(answers(*parts))
 
 
@@ -578,6 +576,7 @@ def dq_choice():
         quote(questions["code"].instructions) + f'<div class="g-codes">{codes}</div>',
         state,
         questions,
+        replies[-1],
     ):
         st.html(answers(*parts))
 
@@ -619,7 +618,7 @@ def er_same_name():
     ra, rb = er_pair("A02", "B02")
     state, questions = er.pair_request(ra, rb)
     answer = judge().ask(state, questions)
-    with example(quote(questions["same"].instructions), state, questions):
+    with example(quote(questions["same"].instructions), state, questions, answer):
         st.html(
             records_table(ra, rb)
             + '<div class="g-gap"></div>'
@@ -705,7 +704,7 @@ def schema_example():
         answer.response.choices["target"].probabilities.items(), key=lambda kv: -kv[1]
     )[:4]
     pick = decided[second["source_col"]]
-    with example(quote(questions["target"].instructions), state, questions):
+    with example(quote(questions["target"].instructions), state, questions, answer):
         st.html(
             source_block(source)
             + answers(
@@ -769,7 +768,7 @@ def pii_example():
     top = quote(text, data=True) + verdict(
         before=f"Regex found: {', '.join(sorted(hits)) or 'nothing'}"
     )
-    with example(top, state, questions):
+    with example(top, state, questions, answer):
         st.html(pii_bars(p) + verdict(route_chip(pii.route(hits, p)), before="Route"))
     rows = ""
     for nid in ("N16", "N19"):

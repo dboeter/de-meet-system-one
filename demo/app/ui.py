@@ -8,7 +8,7 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
-from jevdemo.judge import ENV_FILE, Judge, request_body
+from jevdemo.judge import ENV_FILE, Judge, LiveUnavailable, NotRecorded, request_body
 
 BUCKET_COLOURS = {"accept": "#2e7d32", "review": "#b45309", "reject": "#c4242a"}
 DATA_HUE = "#1d5fbf"
@@ -182,13 +182,28 @@ def strip(
     st.altair_chart(chart, width="stretch")
 
 
-def request_view(state, questions, label="What Jev receives"):
-    with st.expander(label):
-        st.code(
-            json.dumps(request_body(state, questions), indent=2, ensure_ascii=False),
-            language=None,  # plain ink: the highlighter colours fail contrast on the code ground
-            wrap_lines=True,
-        )
+def json_view(body: dict, **kwargs):
+    st.code(
+        json.dumps(body, indent=2, ensure_ascii=False),
+        language=None,  # plain ink: the highlighter colours fail contrast on the code ground
+        wrap_lines=True,
+        **kwargs,
+    )
+
+
+def request_view(state, questions, shape=""):
+    """The request in one expander, Jev's answer to it in the next. `shape` names the question kind."""
+    suffix = f": {shape}" if shape else ""
+    with st.expander(f"What Jev receives{suffix}"):
+        json_view(request_body(state, questions))
+    with st.expander(f"What Jev answers{suffix}"):
+        try:
+            answer = judge(mode()).ask(state, questions)
+        except (NotRecorded, LiveUnavailable) as e:
+            st.caption(str(e))
+        else:
+            json_view(answer.response.model_dump(mode="json"))
+            st.caption(answer_caption(answer))
 
 
 def answer_caption(answer) -> str:

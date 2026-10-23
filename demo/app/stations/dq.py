@@ -142,11 +142,11 @@ with st.expander("Details"):
     st.code(dq.CHECKS.read_text(), language=None, wrap_lines=True)
 ui.request_view(
     *dq.check_request(checks[0], rows[0][checks[0].column]),
-    label="What Jev receives: a Noul",
+    shape="a Noul",
 )
 ui.request_view(
     *dq.check_request(checks[2], rows[0][checks[2].column]),
-    label="What Jev receives: a Choice",
+    shape="a Choice",
 )
 
 your_turn()
