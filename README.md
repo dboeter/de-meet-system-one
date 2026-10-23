@@ -24,6 +24,7 @@ Setup, live mode and tests are in [demo/README.md](demo/README.md).
 | [`jevex/`](jevex/) | Regex vs Jev on customer service email, a web demo with a guided presenter mode | Side demo |
 | [`rm-rjev/`](rm-rjev/) | Jev vs Haiku and Luna as a Claude Code permission judge | Failed experiment, kept for reference |
 | `System_One_Models_DIP_v3.pptx` | The slide deck | |
+| [`LESSONS.md`](LESSONS.md) | Lessons learned about working with System One models | |
 
 If you only look at one thing, look at `demo/`.
 
