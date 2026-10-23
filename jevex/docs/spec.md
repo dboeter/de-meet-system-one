@@ -92,8 +92,8 @@ the baseline regex, the Jev questions, the presets, and what the presenter says.
   "Third time writing about this" (repeat contact with no keyword; `wants_human` in the
   review band), "My manager asked me to
   order 40 more" (regex fires on `manager`).
-- **Shows:** a per-flag threshold pair (`no < p < yes` = review band). Moving the sliders
-  re-colours the results without a new request.
+- **Shows:** one threshold pair for all five flags (`no < p < yes` = review band). Moving
+  the sliders re-colours the results without a new request.
 
 ### 3. Triage — route with confidence gating
 
@@ -164,20 +164,26 @@ Modelled on the ex-regex playground screenshot.
   toggle.
 - **Left nav:** stations grouped as *Classify* (1, 2, 3), *Extract* (4, 5), *Trust* (6).
 - **Station header:** title, one-sentence explanation, preset chips.
-- **Body, three columns on wide screens, stacked on narrow:**
-  1. **Input:** editable email text. Ask button and `Ctrl+Enter`.
-  2. **Regex:** the baseline pattern (editable), its verdict, matched text highlighted in
-     the email. A red ✗ or green ✓ against the preset's gold label.
-  3. **Jev:** answer, probability bars for every option or flag, threshold slider(s),
-     the code path taken (for station 3), the same ✗/✓ badge.
+- **Body, the email on top, Jev and regex side by side below (stacked on narrow):**
+  1. **Input:** the email, shown once and editable, with the regex's matches (and, on
+     station 4, Jev's pick) marked on the text. The preset's expected answer beside it.
+     Ask button and `Ctrl+Enter`.
+  2. **Jev (the wider column):** the plain-English question asked, the answer, probability
+     bars for every option or flag, threshold slider(s), the code path taken (for
+     station 3), a ✗/✓ badge against the preset's gold label.
+  3. **Regex:** one line on what the baseline does, its verdict with the same badge, and
+     the pattern (editable) collapsed under it.
 - **Under the columns, collapsed by default:** "Request" (the exact JSON sent: state +
   questions), "Response" (raw answer JSON), and "Code" (the TypeScript SDK call, copyable).
-- **Footer per answer:** model ID, input tokens, cost (input tokens × $0.042 per million,
+- **Usage, inside "Response":** model ID, input tokens, cost (input tokens × $0.042 per million,
   from the [models page](https://docs.typesafe.ai/models.md); output tokens are free),
   latency (live only; recorded answers show the latency measured when recorded).
 - **Projector-friendly:** base font ≥ 18 px, a "presenter" zoom (`+`/`-`), high-contrast
   light theme matching the Streamlit demo's (`demo/.streamlit/config.toml`), no hover-only
   information.
+- **Guided mode is a slide:** it hides the left nav, preset chips, sliders, the collapsed
+  pattern and wording, and Request/Response/Code. Ask appears once the presenter types,
+  or on the blank live box.
 - **Thresholds never re-ask:** moving a slider recomputes from stored probabilities.
 - **Editable meaning (live mode):** in free play the Jev column's instructions and
   option descriptions are editable, the counterpart of editing the regex. Rewording

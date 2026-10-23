@@ -220,9 +220,11 @@ def pii_claim(routed: pd.DataFrame) -> str:
     route = routed.set_index("id")["route"]
     by_regex = sum(bool(HITS[n["id"]]) for n in contextual)
     by_jev = sum(route[n["id"]] != "clear" for n in contextual)
+    numbered = sum(bool(h) for h in HITS.values())
     return (
-        f"Regex finds {by_regex} of the {len(contextual)} notes with personal details. "
-        f"With Jev: {by_jev}."
+        f"Regex finds {by_regex} of the {len(contextual)} notes whose personal details are in "
+        f"context (health, finances, address…). It catches the {numbered} with a BSN, IBAN, "
+        f"phone or email. With Jev: {by_jev}."
     )
 
 

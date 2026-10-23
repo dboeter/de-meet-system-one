@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { parseRules } from "../../core/regex.ts";
 import { readScan, scan, scanRegex, splitSentences, type ScanPreset } from "../../core/stations/scan.ts";
-import { Columns, EmailInput, Highlighted, JevDetails, JevOutcome, MeaningEditor, PresetChips, RulesEditor, Slider, StationHeader, Verdict } from "../components.tsx";
+import { Answer, Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, RulesEditor, Slider, StationHeader, Verdict } from "../components.tsx";
 import { useJev } from "../useJev.ts";
 import { startPreset, type ViewProps } from "../start.ts";
 
@@ -21,6 +21,9 @@ export function ScanView(props: ViewProps) {
   const gold = preset && preset.text === text ? preset.gold : undefined;
   const rules = parseRules(rulesText);
   const hits = rules.kind === "ok" ? scanRegex(rules.rules, sentences) : null;
+  const flagged = hits?.filter((h) => h.hit).length ?? 0;
+  // The question is asked per sentence by path; show it as it reads to a person.
+  const question = (jev.wording.needs_action?.instructions ?? "").replace(/`sentences\[\{i\}\]`/, "this sentence").split("? ")[0];
 
   return (
     <>
@@ -40,31 +43,33 @@ export function ScanView(props: ViewProps) {
       />
       <Columns
         input={
-          <>
-            <EmailInput value={text} onChange={setText} onAsk={() => jev.run({ text })} rows={8} />
-            {gold && preset && <p className="gold">{preset.note}</p>}
-          </>
+          <EmailInput
+            value={text}
+            onChange={setText}
+            onAsk={() => jev.run({ text })}
+            rows={6}
+            marks={hits ? hits.flatMap((h) => (h.hit ? [h.hit] : [])) : []}
+          />
         }
+        note={gold && preset && <p className="gold">{preset.note}</p>}
         regex={
           <>
-            <RulesEditor value={rulesText} onChange={setRulesText} label="Problem words" />
+            <p className="regex-kind">A sentence needs action if it has a problem word</p>
             {hits && (
-              <>
-                <ul className="sentences">
-                  {hits.map((h, i) => (
-                    <li key={h.span.start} className={h.hit ? "on-regex" : ""}>
-                      <span className="sentence-text">{h.span.text}</span>
-                      <Verdict correct={gold?.[i] === undefined ? undefined : Boolean(h.hit) === gold[i]} />
-                    </li>
-                  ))}
-                </ul>
-                <Highlighted text={text} spans={hits.flatMap((h) => (h.hit ? [h.hit] : []))} />
-              </>
+              <Answer
+                label={`${flagged} of ${hits.length}`}
+                correct={gold ? hits.every((h, i) => gold[i] === undefined || Boolean(h.hit) === gold[i]) : undefined}
+                detail={`sentence${flagged === 1 ? "" : "s"} flagged`}
+              />
             )}
+            <Pattern label="Pattern">
+              <RulesEditor value={rulesText} onChange={setRulesText} label="Problem words" />
+            </Pattern>
           </>
         }
         jev={
           <>
+          <JevQuestion>{question}? Asked once per sentence, in one request.</JevQuestion>
           <JevOutcome result={jev.result}>
             {(ok) => {
               const state = ok.request.state;

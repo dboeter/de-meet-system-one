@@ -1,9 +1,18 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useState } from "react";
 import { choiceOf, ranked } from "../../core/jev.ts";
 import { extract, findCandidates, KINDS, NONE, readPick, type ExtractPreset, type Kind } from "../../core/stations/extract.ts";
-import { Answer, Columns, EmailInput, Highlighted, JevDetails, JevOutcome, MeaningEditor, PresetChips, ProbBars, RulesEditor, StationHeader } from "../components.tsx";
-import { useJev } from "../useJev.ts";
+import { Answer, Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, ProbBars, RulesEditor, StationHeader } from "../components.tsx";
+import { useDemo } from "../demo.tsx";
+import { useJev, type JevResult } from "../useJev.ts";
 import { startPreset, type ViewProps } from "../start.ts";
+
+/** Jev's pick and its probability, checked against the options that were sent, not the ones Jev echoed back. */
+function pickOf(ok: Extract<JevResult, { kind: "ok" }>): { value: string; p: number } {
+  const q = ok.request.questions.pick;
+  const candidates = q?.type === "choice" ? Object.keys(q.criteria).filter((c) => c !== NONE) : [];
+  const pick = readPick(ok.response, candidates);
+  return { value: pick.kind === "picked" ? pick.value : "none", p: pick.p };
+}
 
 export function ExtractView(props: ViewProps) {
   const initial = startPreset(extract.presets, props.start);
@@ -13,7 +22,7 @@ export function ExtractView(props: ViewProps) {
   const [finders, setFinders] = useState<Readonly<Record<Kind, string>>>(extract.finders);
   const [skipped, setSkipped] = useState(false);
   const jev = useJev(extract);
-  const kindId = useId();
+  const { presenting } = useDemo();
 
   const found = findCandidates(finders[kind], text);
 
@@ -30,6 +39,8 @@ export function ExtractView(props: ViewProps) {
 
   const gold = preset && preset.text === text && preset.kind === kind ? preset.gold : undefined;
   const regexPick = found.candidates[0];
+  const jevPick = !skipped && jev.result.kind === "ok" ? pickOf(jev.result).value : null;
+  const question = extract.defaultWording[kind]?.instructions ?? kind;
 
   return (
     <>
@@ -50,10 +61,40 @@ export function ExtractView(props: ViewProps) {
       />
       <Columns
         input={
+          <EmailInput
+            value={text}
+            onChange={setText}
+            onAsk={() => ask(kind, text, finders[kind])}
+            label="Text"
+            marks={found.spans.map((s) => (s.text === jevPick ? { ...s, className: "hit-jev" } : s))}
+          />
+        }
+        note={
+          gold &&
+          preset && (
+            <p className="gold">
+              Expected: <strong>{gold}</strong>. {preset.note}
+            </p>
+          )
+        }
+        regex={
           <>
-            <div className="field">
-              <label htmlFor={kindId}>Looking for</label>
-              <select id={kindId} value={kind} onChange={(e) => setKind(KINDS.find((k) => k === e.target.value) ?? "order")}>
+            <p className="regex-kind">
+              Finds {found.candidates.length} candidate{found.candidates.length === 1 ? "" : "s"}; takes the first
+            </p>
+            <Answer label={regexPick ?? "no match"} correct={gold === undefined ? undefined : regexPick === gold} />
+            <Pattern label="Finder">
+              <RulesEditor value={finders[kind]} onChange={(v) => setFinders({ ...finders, [kind]: v })} label="Finder" />
+            </Pattern>
+          </>
+        }
+        jev={
+          <>
+          {presenting ? (
+            <JevQuestion>{question}</JevQuestion>
+          ) : (
+            <div className="field jev-question">
+              <select aria-label="Question" value={kind} onChange={(e) => setKind(KINDS.find((k) => k === e.target.value) ?? "order")}>
                 {KINDS.map((k) => (
                   <option key={k} value={k}>
                     {extract.defaultWording[k]?.instructions ?? k}
@@ -61,26 +102,7 @@ export function ExtractView(props: ViewProps) {
                 ))}
               </select>
             </div>
-            <EmailInput value={text} onChange={setText} onAsk={() => ask(kind, text, finders[kind])} rows={7} label="Text" />
-            {gold && preset && (
-              <p className="gold">
-                Expected: <strong>{gold}</strong>. {preset.note}
-              </p>
-            )}
-          </>
-        }
-        regex={
-          <>
-            <RulesEditor value={finders[kind]} onChange={(v) => setFinders({ ...finders, [kind]: v })} label="Finder" />
-            <div className="answer-line">
-              {found.spans.length} matches, {found.candidates.length} distinct
-            </div>
-            <Answer label={regexPick ?? "no match"} correct={gold === undefined ? undefined : regexPick === gold} detail="first match" />
-            <Highlighted text={text} spans={found.spans} />
-          </>
-        }
-        jev={
-          <>
+          )}
           {skipped ? (
             <p className="notice" data-testid="no-candidates">
               The finder found no candidates, so there is nothing for Jev to pick from. Jev was not asked.
@@ -88,18 +110,10 @@ export function ExtractView(props: ViewProps) {
           ) : (
             <JevOutcome result={jev.result}>
               {(ok) => {
-                // Check the pick against the options that were sent, not the ones Jev echoed back.
-                const q = ok.request.questions.pick;
-                const candidates = q?.type === "choice" ? Object.keys(q.criteria).filter((c) => c !== NONE) : [];
-                const pick = readPick(ok.response, candidates);
-                const value = pick.kind === "picked" ? pick.value : "none";
+                const { value, p } = pickOf(ok);
                 return (
                   <>
-                    <Answer label={value} correct={gold === undefined ? undefined : value === gold} detail={`p ${pick.p.toFixed(2)}`} />
-                    <Highlighted
-                      text={text}
-                      spans={found.spans.map((s) => (s.text === value ? { ...s, className: "hit-jev" } : s))}
-                    />
+                    <Answer label={value} correct={gold === undefined ? undefined : value === gold} detail={`p ${p.toFixed(2)}`} />
                     <ProbBars rows={ranked(choiceOf(ok.response, "pick")).map((r) => ({ ...r, chosen: r.label === value }))} />
                   </>
                 );

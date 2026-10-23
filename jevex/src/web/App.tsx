@@ -179,8 +179,8 @@ function Presenter() {
   const View = view.View;
 
   return (
-    <DemoContext.Provider value={{ mode, liveAvailable, liveBlocked: health.blocked, refreshHealth: health.refresh }}>
-      <div className="app">
+    <DemoContext.Provider value={{ mode, liveAvailable, liveBlocked: health.blocked, refreshHealth: health.refresh, presenting: route.kind === "guided" }}>
+      <div className={route.kind === "guided" ? "app presenting" : "app"}>
         <header className="topbar">
           <div className="brand">
             <span className="logo" aria-hidden>
@@ -225,6 +225,7 @@ function Presenter() {
             </button>
           </div>
         </header>
+        {route.kind !== "guided" && (
         <nav className="sidenav" aria-label="Stations">
           {groups.map((g) => (
             <div key={g} className="nav-group">
@@ -237,6 +238,7 @@ function Presenter() {
             </div>
           ))}
         </nav>
+        )}
         <main className="main">
           {route.kind === "guided" && step && (
             <div className="guided-bar" data-testid="guided-bar">

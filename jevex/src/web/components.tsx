@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from "react";
+import { useId, useRef, useState, type ReactNode } from "react";
 import { sdkSnippet } from "../core/code.ts";
 import { costUsd } from "../core/config.ts";
 import { parseRules, type Span } from "../core/regex.ts";
@@ -22,6 +22,8 @@ export function PresetChips<P extends { id: string; label: string }>(props: {
   selected: string | null;
   onPick: (preset: P) => void;
 }) {
+  const { presenting } = useDemo();
+  if (presenting) return null;
   return (
     <div className="chips" role="group" aria-label="Examples">
       {props.presets.map((p) => (
@@ -39,20 +41,22 @@ export function PresetChips<P extends { id: string; label: string }>(props: {
   );
 }
 
-export function Columns(props: { input: ReactNode; regex: ReactNode; jev: ReactNode; below?: ReactNode }) {
+/** The email across the top with its note beside it; Jev's answer below, the regex's next to it. */
+export function Columns(props: { input: ReactNode; note?: ReactNode; regex: ReactNode; jev: ReactNode; below?: ReactNode }) {
   return (
     <>
     <div className="columns">
       <section className="card col-input" aria-label="Input">
-        {props.input}
-      </section>
-      <section className="card col-regex" aria-label="Regex">
-        <h2>Regex</h2>
-        {props.regex}
+        <div className="input-main">{props.input}</div>
+        {props.note && <div className="input-note">{props.note}</div>}
       </section>
       <section className="card col-jev" aria-label="Jev">
         <h2>Jev</h2>
         {props.jev}
+      </section>
+      <section className="card col-regex" aria-label="Regex">
+        <h2>Regex</h2>
+        {props.regex}
       </section>
     </div>
     {props.below}
@@ -60,31 +64,86 @@ export function Columns(props: { input: ReactNode; regex: ReactNode; jev: ReactN
   );
 }
 
-export function EmailInput(props: { value: string; onChange: (v: string) => void; onAsk: () => void; label?: string; rows?: number }) {
+type Mark = Span & { className?: string; title?: string };
+
+/**
+ * The email, editable, with the regex's matches (and Jev's pick) marked on the text itself,
+ * so the screen shows the email once. The marks sit on a backdrop behind a transparent
+ * textarea; both use the same font, padding and wrapping, which is what keeps them aligned.
+ */
+export function EmailInput(props: {
+  value: string;
+  onChange: (v: string) => void;
+  onAsk: () => void;
+  label?: string;
+  rows?: number;
+  marks?: readonly Mark[];
+}) {
   const id = useId();
+  const { presenting } = useDemo();
+  const [edited, setEdited] = useState(false);
+  const backdrop = useRef<HTMLDivElement>(null);
+  // Presenting hides Ask until the presenter types, or on the blank live box.
+  const showAsk = !presenting || edited || props.value === "";
   return (
     <div className="field">
       <label htmlFor={id}>{props.label ?? "Email"}</label>
-      <textarea
-        id={id}
-        data-testid="email-input"
-        value={props.value}
-        rows={props.rows ?? 6}
-        onChange={(e) => props.onChange(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
-            e.preventDefault();
-            props.onAsk();
-          }
-        }}
-      />
+      <div className="email-box">
+        <div className="email-backdrop" ref={backdrop} aria-hidden>
+          <Marked text={props.value} spans={props.marks ?? []} />
+          {/* A trailing newline in a textarea adds a line; the backdrop needs one too. */}
+          {"\n"}
+        </div>
+        <textarea
+          id={id}
+          data-testid="email-input"
+          value={props.value}
+          rows={props.rows ?? 4}
+          onScroll={(e) => {
+            if (backdrop.current) backdrop.current.scrollTop = e.currentTarget.scrollTop;
+          }}
+          onChange={(e) => {
+            setEdited(true);
+            props.onChange(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+              e.preventDefault();
+              props.onAsk();
+            }
+          }}
+        />
+      </div>
+      {showAsk && (
       <div className="ask-row">
         <button type="button" className="ask" onClick={props.onAsk}>
           Ask
         </button>
         <kbd>Ctrl+Enter</kbd>
       </div>
+      )}
     </div>
+  );
+}
+
+/** The regex pattern, collapsed: the verdict is what the room reads; the pattern is there to inspect or edit. */
+export function Pattern(props: { label: string; children: ReactNode }) {
+  const { presenting } = useDemo();
+  if (presenting) return null;
+  return (
+    <details className="pattern">
+      <summary>{props.label}</summary>
+      {props.children}
+    </details>
+  );
+}
+
+/** The plain-English question Jev is asked, shown above its answer. */
+export function JevQuestion(props: { children: ReactNode }) {
+  return (
+    <p className="jev-question" data-testid="jev-question">
+      {props.children}
+    </p>
   );
 }
 
@@ -113,7 +172,7 @@ export function RulesEditor(props: { value: string; onChange: (v: string) => voi
 }
 
 /** Text with spans marked; overlapping spans are not supported (regex matches don't overlap). */
-export function Highlighted(props: { text: string; spans: readonly (Span & { className?: string; title?: string })[] }) {
+function Marked(props: { text: string; spans: readonly Mark[] }) {
   const sorted = [...props.spans].sort((a, b) => a.start - b.start);
   const parts: ReactNode[] = [];
   let at = 0;
@@ -128,7 +187,7 @@ export function Highlighted(props: { text: string; spans: readonly (Span & { cla
     at = s.end;
   }
   parts.push(props.text.slice(at));
-  return <p className="highlighted">{parts}</p>;
+  return <>{parts}</>;
 }
 
 export function Verdict(props: { correct: boolean | undefined }) {
@@ -172,6 +231,8 @@ export function ProbBars(props: { rows: readonly { label: string; p: number; cho
 
 export function Slider(props: { label: string; value: number; onChange: (v: number) => void; min?: number; max?: number; step?: number }) {
   const id = useId();
+  const { presenting } = useDemo();
+  if (presenting) return null;
   return (
     <div className="slider">
       <label htmlFor={id}>{props.label}</label>
@@ -196,7 +257,7 @@ function formatUsd(usd: number): string {
 }
 
 /** Model, tokens, cost and latency of one answer. */
-export function UsageFooter(props: { result: OkResult }) {
+function UsageFooter(props: { result: OkResult }) {
   const { response, latencyMs, source, recordedAt } = props.result;
   const tokens = response.usage.input_tokens;
   const cost = costUsd(tokens);
@@ -236,8 +297,9 @@ function CopyButton(props: { text: string }) {
 /** The exact request, the raw response, and the SDK call, collapsed by default. */
 export function JevDetails(props: { result: JevResult }) {
   const { result } = props;
+  const { presenting } = useDemo();
   const request = result.kind === "ok" || result.kind === "not_recorded" ? result.request : null;
-  if (!request) return null;
+  if (!request || presenting) return null;
   const code = sdkSnippet(request);
   return (
     <div className="details">
@@ -248,6 +310,7 @@ export function JevDetails(props: { result: JevResult }) {
       {result.kind === "ok" && (
         <details>
           <summary>Response</summary>
+          <UsageFooter result={result} />
           <pre>{JSON.stringify(result.response, null, 2)}</pre>
         </details>
       )}
@@ -265,15 +328,16 @@ export function JevDetails(props: { result: JevResult }) {
  * Option names stay fixed; only the question and option descriptions change.
  */
 export function MeaningEditor(props: { jev: Jev }) {
-  const { mode } = useDemo();
+  const { mode, presenting } = useDemo();
   const { wording, setWording, defaultWording } = props.jev;
   const locked = mode !== "live";
   const edited = JSON.stringify(wording) !== JSON.stringify(defaultWording);
   const update = (key: string, entry: WordingEntry) => setWording({ ...wording, [key]: entry });
+  if (presenting) return null;
   return (
     <details className="meaning" open={edited || undefined}>
       <summary>
-        Meaning {edited && <span className="band band-review">edited</span>}
+        Full wording {edited && <span className="band band-review">edited</span>}
       </summary>
       {locked && <p className="muted small">Recorded answers use this wording. Switch to Live to edit it.</p>}
       {Object.entries(wording).map(([key, entry]) => (
@@ -331,10 +395,9 @@ export function JevOutcome(props: { result: JevResult; children: (ok: OkResult) 
       );
     case "ok":
       return (
-        <>
+        <div className="jev-answer" data-testid="jev-answer" data-source={result.source}>
           {props.children(result)}
-          <UsageFooter result={result} />
-        </>
+        </div>
       );
     default: {
       const _exhaustive: never = result;

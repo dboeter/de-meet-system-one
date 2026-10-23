@@ -13,9 +13,11 @@ export type Demo = {
   readonly liveBlocked: LiveBlock | null;
   /** Re-read `/api/health`; called after every live answer. */
   readonly refreshHealth: () => void;
+  /** Guided mode: the screen is a slide, so controls and raw detail are hidden. */
+  readonly presenting: boolean;
 };
 
-export const DemoContext = createContext<Demo>({ mode: "recorded", liveAvailable: false, liveBlocked: null, refreshHealth: () => {} });
+export const DemoContext = createContext<Demo>({ mode: "recorded", liveAvailable: false, liveBlocked: null, refreshHealth: () => {}, presenting: false });
 
 export function useDemo(): Demo {
   return useContext(DemoContext);

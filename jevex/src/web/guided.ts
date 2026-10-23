@@ -32,7 +32,7 @@ export const GUIDED: readonly [GuidedStep, ...GuidedStep[]] = [
     title: "Several things at once, and an honest 'not sure'",
     start: { kind: "preset", presetId: "third-time" },
     highlight: ".col-jev",
-    note: "Five yes/no questions in one request. 'Third time writing… get me someone': Jev is sure this is a repeat contact, but puts 'wants a human' in the middle, so it goes to review. Move a slider: nothing is asked again.",
+    note: "Five yes/no questions in one request. 'Third time writing… get me someone': Jev is sure this is a repeat contact, but puts 'wants a human' in the middle, so it goes to review. In free play the band moves without asking again.",
   },
   {
     view: "triage",

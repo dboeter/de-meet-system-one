@@ -80,6 +80,10 @@ button:disabled {
   min-height: 100vh;
 }
 
+.app.presenting {
+  grid-template-columns: 1fr;
+}
+
 .topbar {
   grid-column: 1 / -1;
   display: flex;
@@ -239,9 +243,31 @@ button:disabled {
 
 .columns {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
   gap: 1rem;
   align-items: start;
+}
+
+/* The email spans the top; its note sits beside it. */
+.col-input {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.input-main:only-child {
+  grid-column: 1 / -1;
+}
+
+.input-main .field {
+  margin-bottom: 0;
+}
+
+.input-note {
+  /* Line up with the textarea, below the field label. */
+  padding-top: 1.7rem;
 }
 
 .card {
@@ -327,12 +353,45 @@ kbd {
   font-size: 0.9rem;
 }
 
-.highlighted {
+/*
+ * Marks drawn behind a transparent textarea. The backdrop must match the textarea's font,
+ * padding, border and wrapping exactly, and marks must not add width (no padding), or the
+ * marks drift off their words.
+ */
+.email-box {
+  position: relative;
   background: var(--panel-2);
-  border-radius: 0.5rem;
+  border-radius: var(--radius-button);
+}
+
+.email-box textarea,
+.email-backdrop {
+  /* A scrollbar would narrow only the textarea and shift the wrapping; reserve it in both. */
+  scrollbar-gutter: stable;
+}
+
+.email-box textarea {
+  position: relative;
+  display: block;
+  background: transparent;
+}
+
+.email-backdrop {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
   padding: 0.6rem 0.75rem;
+  border: 1px solid transparent;
   white-space: pre-wrap;
-  margin: 0.5rem 0 0;
+  overflow-wrap: break-word;
+  color: transparent;
+  pointer-events: none;
+}
+
+.email-backdrop mark {
+  padding: 0;
+  border-radius: 0.15rem;
+  color: transparent;
 }
 
 mark {
@@ -359,8 +418,12 @@ mark.hit-jev {
   margin-bottom: 0.4rem;
 }
 
+.col-regex .answer-label {
+  font-size: 1.3rem;
+}
+
 .answer-label {
-  font-size: 1.6rem;
+  font-size: 1.9rem;
   font-weight: 700;
   font-family: var(--mono);
 }
@@ -471,8 +534,13 @@ mark.hit-jev {
 }
 
 @media (max-width: 1100px) {
-  .columns {
+  .columns,
+  .col-input {
     grid-template-columns: 1fr;
+  }
+
+  .input-note {
+    padding-top: 0;
   }
 }
 
@@ -500,9 +568,7 @@ mark.hit-jev {
   display: flex;
   flex-wrap: wrap;
   gap: 0.4rem 1rem;
-  margin-top: 0.9rem;
-  padding-top: 0.6rem;
-  border-top: 1px solid var(--border);
+  margin-top: 0.6rem;
   color: var(--muted);
   font-size: 0.9rem;
   font-family: var(--mono);
@@ -739,14 +805,6 @@ select {
   height: 0.35rem;
 }
 
-.col-regex .sentences li {
-  grid-template-columns: 1fr auto;
-}
-
-.sentences li.on-regex {
-  background: var(--regex-soft);
-}
-
 .sentences li.on-jev {
   background: var(--accent-soft);
 }
@@ -763,12 +821,49 @@ select {
   padding-top: 0.6rem;
 }
 
-.meaning summary {
+.meaning summary,
+.pattern summary {
   cursor: pointer;
   font-weight: 600;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.meaning summary .band {
+  margin-left: 0.5rem;
+}
+
+.pattern {
+  margin-top: 0.9rem;
+  border-top: 1px solid var(--border);
+  padding-top: 0.6rem;
+}
+
+.pattern .field {
+  margin: 0.5rem 0 0;
+}
+
+.jev-question {
+  margin: 0 0 0.9rem;
+  font-size: 1.05rem;
+}
+
+.jev-question select {
+  font: inherit;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-button);
+  background: var(--panel-2);
+}
+
+.regex-kind {
+  margin: 0 0 0.6rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.band-sliders.shared {
+  margin-bottom: 0.6rem;
 }
 
 .meaning fieldset {

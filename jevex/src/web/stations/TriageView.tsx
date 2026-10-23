@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { parseRules } from "../../core/regex.ts";
 import { route, triage, triageRegex, type TriagePath, type TriagePreset, type TriageThresholds } from "../../core/stations/triage.ts";
-import { Answer, Columns, EmailInput, Highlighted, JevDetails, JevOutcome, MeaningEditor, PresetChips, ProbBars, RulesEditor, Slider, StationHeader, Verdict } from "../components.tsx";
+import { Answer, Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, ProbBars, RulesEditor, Slider, StationHeader, Verdict } from "../components.tsx";
+import { useDemo } from "../demo.tsx";
 import { useJev } from "../useJev.ts";
 import { startPreset, type ViewProps } from "../start.ts";
 
@@ -38,6 +39,7 @@ export function TriageView(props: ViewProps) {
   const [rulesText, setRulesText] = useState<string>(triage.defaultRules);
   const [urgencyText, setUrgencyText] = useState<string>(triage.defaultUrgencyRule);
   const [t, setT] = useState<TriageThresholds>(triage.defaultThresholds);
+  const { presenting } = useDemo();
   const jev = useJev(triage);
 
   useEffect(() => {
@@ -67,40 +69,49 @@ export function TriageView(props: ViewProps) {
       />
       <Columns
         input={
-          <>
-            <EmailInput value={text} onChange={setText} onAsk={() => jev.run({ text })} />
-            {gold && preset && (
-              <p className="gold">
-                Expected: <strong>{gold.department}</strong>
-                {gold.urgent ? ", urgent" : ", not urgent"}. {preset.note}
-              </p>
-            )}
-          </>
+          <EmailInput
+            value={text}
+            onChange={setText}
+            onAsk={() => jev.run({ text })}
+            marks={regex ? [regex.departmentSpan, regex.urgentSpan].flatMap((s) => (s ? [s] : [])) : []}
+          />
+        }
+        note={
+          gold &&
+          preset && (
+            <p className="gold">
+              Expected: <strong>{gold.department}</strong>
+              {gold.urgent ? ", urgent" : ", not urgent"}. {preset.note}
+            </p>
+          )
         }
         regex={
           <>
-            <RulesEditor value={rulesText} onChange={setRulesText} label="Routing table" />
-            <RulesEditor value={urgencyText} onChange={setUrgencyText} label="Urgency rule" />
+            <p className="regex-kind">Routing table and an urgency rule</p>
             {regex && (
               <>
                 {/* No matching row falls through to the catch-all team, as the eval scores it. */}
                 <Answer
                   label={regex.department === "none" ? "none → other" : regex.department}
                   correct={gold ? (regex.department === "none" ? "other" : regex.department) === gold.department : undefined}
+                  detail={regex.departmentSpan ? `saw “${regex.departmentSpan.text}”` : "no row matched"}
                 />
                 <div className="answer-line">
                   {regex.urgent ? "urgent" : "not urgent"} <Verdict correct={gold ? regex.urgent === gold.urgent : undefined} />
                 </div>
-                <Highlighted
-                  text={text}
-                  spans={[regex.departmentSpan, regex.urgentSpan].flatMap((s) => (s ? [s] : []))}
-                />
               </>
             )}
+            <Pattern label="Patterns">
+              <RulesEditor value={rulesText} onChange={setRulesText} label="Routing table" />
+              <RulesEditor value={urgencyText} onChange={setUrgencyText} label="Urgency rule" />
+            </Pattern>
           </>
         }
         jev={
           <>
+          <JevQuestion>
+            {jev.wording.department?.instructions} {jev.wording.urgency?.instructions}
+          </JevQuestion>
           <JevOutcome result={jev.result}>
             {(ok) => {
               const r = route(ok.response, t);
@@ -114,7 +125,7 @@ export function TriageView(props: ViewProps) {
                   </div>
                   <ProbBars rows={r.departments.map((d) => ({ ...d, chosen: d.label === team }))} />
                   <Slider label="Route if confidence ≥" value={t.minConfidence} onChange={(v) => setT({ ...t, minConfidence: v })} />
-                  <div className="muted small">department confidence {r.confidence.toFixed(2)}</div>
+                  {!presenting && <div className="muted small">department confidence {r.confidence.toFixed(2)}</div>}
                   <Slider label="Copy team if p >" value={t.copyAbove} onChange={(v) => setT({ ...t, copyAbove: v })} />
                   <Slider label="Urgent if score ≥" value={t.urgentAt} min={0} max={2} onChange={(v) => setT({ ...t, urgentAt: v })} />
                 </>

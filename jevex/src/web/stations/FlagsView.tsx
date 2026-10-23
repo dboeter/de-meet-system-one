@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { parseRules } from "../../core/regex.ts";
 import { FLAGS, flags, flagsRegex, readFlags, type Flag, type FlagsPreset } from "../../core/stations/flags.ts";
 import type { BandThresholds } from "../../core/thresholds.ts";
-import { Columns, EmailInput, Highlighted, JevDetails, JevOutcome, MeaningEditor, PresetChips, RulesEditor, StationHeader, Verdict } from "../components.tsx";
+import { Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, RulesEditor, StationHeader, Verdict } from "../components.tsx";
+import { useDemo } from "../demo.tsx";
 import { useJev } from "../useJev.ts";
 import { startPreset, type ViewProps } from "../start.ts";
 
@@ -13,7 +14,10 @@ export function FlagsView(props: ViewProps) {
   const [text, setText] = useState(initial?.text ?? "");
   const [preset, setPreset] = useState<FlagsPreset | undefined>(initial);
   const [rulesText, setRulesText] = useState<string>(flags.defaultRules);
-  const [thresholds, setThresholds] = useState<Readonly<Record<Flag, BandThresholds>>>(flags.defaultThresholds);
+  // One review band for all five flags; the defaults are the same for each.
+  const [band, setBand] = useState<BandThresholds>(flags.defaultThresholds[FLAGS[0]]);
+  const thresholds = Object.fromEntries(FLAGS.map((f) => [f, band])) as Record<Flag, BandThresholds>;
+  const { presenting } = useDemo();
   const jev = useJev(flags);
 
   useEffect(() => {
@@ -24,20 +28,16 @@ export function FlagsView(props: ViewProps) {
   const rules = parseRules(rulesText);
   const hits = rules.kind === "ok" ? flagsRegex(rules.rules, text) : null;
 
-  const setThreshold = (flag: Flag, key: keyof BandThresholds, v: number) =>
-    setThresholds((t) => {
-      const cur = t[flag];
-      // Keep no ≤ yes so the review band never inverts.
-      const next = key === "no" ? { no: Math.min(v, cur.yes), yes: cur.yes } : { no: cur.no, yes: Math.max(v, cur.no) };
-      return { ...t, [flag]: next };
-    });
+  // Keep no ≤ yes so the review band never inverts.
+  const setThreshold = (key: keyof BandThresholds, v: number) =>
+    setBand((cur) => (key === "no" ? { no: Math.min(v, cur.yes), yes: cur.yes } : { no: cur.no, yes: Math.max(v, cur.no) }));
 
   return (
     <>
       <StationHeader
         title="Flags"
         code="noul × 5"
-        blurb="Several things can be true of one email. One request asks five yes/no questions; each has its own review band, and moving a slider never asks Jev again."
+        blurb="Several things can be true of one email. One request asks five yes/no questions; each answer lands in yes, review or no, and moving the band never asks Jev again."
       />
       <PresetChips
         presets={flags.presets}
@@ -50,20 +50,25 @@ export function FlagsView(props: ViewProps) {
       />
       <Columns
         input={
-          <>
-            <EmailInput value={text} onChange={setText} onAsk={() => jev.run({ text })} />
-            {gold && preset && (
-              <p className="gold">
-                Expected: <strong>{FLAGS.filter((f) => gold[f]).join(", ") || "no flags"}</strong>. {preset.note}
-              </p>
-            )}
-          </>
+          <EmailInput
+            value={text}
+            onChange={setText}
+            onAsk={() => jev.run({ text })}
+            marks={hits ? FLAGS.flatMap((f) => (hits[f] ? [{ ...hits[f], title: f }] : [])) : []}
+          />
+        }
+        note={
+          gold &&
+          preset && (
+            <p className="gold">
+              Expected: <strong>{FLAGS.filter((f) => gold[f]).join(", ") || "no flags"}</strong>. {preset.note}
+            </p>
+          )
         }
         regex={
           <>
-            <RulesEditor value={rulesText} onChange={setRulesText} label="One pattern per flag" />
+            <p className="regex-kind">One keyword pattern per flag</p>
             {hits && (
-              <>
                 <ul className="flag-list">
                   {FLAGS.map((f) => (
                     <li key={f}>
@@ -73,20 +78,36 @@ export function FlagsView(props: ViewProps) {
                     </li>
                   ))}
                 </ul>
-                <Highlighted text={text} spans={FLAGS.flatMap((f) => (hits[f] ? [{ ...hits[f], title: f }] : []))} />
-              </>
             )}
+            <Pattern label="Patterns">
+              <RulesEditor value={rulesText} onChange={setRulesText} label="One pattern per flag" />
+            </Pattern>
           </>
         }
         jev={
           <>
+          <JevQuestion>Five yes/no questions in one request. Between the two thresholds, a person reviews.</JevQuestion>
+          {!presenting && (
+            <div className="band-sliders shared">
+              <label>
+                no ≤
+                <input type="range" min={0} max={1} step={0.01} value={band.no} aria-label="no threshold" onChange={(e) => setThreshold("no", Number(e.target.value))} />
+                <output>{band.no.toFixed(2)}</output>
+              </label>
+              <label>
+                yes ≥
+                <input type="range" min={0} max={1} step={0.01} value={band.yes} aria-label="yes threshold" onChange={(e) => setThreshold("yes", Number(e.target.value))} />
+                <output>{band.yes.toFixed(2)}</output>
+              </label>
+            </div>
+          )}
           <JevOutcome result={jev.result}>
             {(ok) => (
               <ul className="flag-list jev-flags">
                 {readFlags(ok.response, thresholds).map((r) => (
                   <li key={r.flag} className={`band-${r.band}`} data-testid={`flag-${r.flag}`}>
                     <div className="flag-head">
-                      <code>{r.flag.replaceAll("_", "_\u200b")}</code>
+                      <code title={jev.wording[r.flag]?.instructions}>{r.flag.replaceAll("_", "_\u200b")}</code>
                       <span className="flag-p">{r.p.toFixed(2)}</span>
                       <span className={`band band-${r.band}`}>{BAND_LABEL[r.band]}</span>
                       {/* A review answer is neither right nor wrong: a person decides. */}
@@ -95,34 +116,6 @@ export function FlagsView(props: ViewProps) {
                     <span className="bar-track">
                       <span className="bar-fill" style={{ width: `${Math.round(r.p * 100)}%` }} />
                     </span>
-                    <div className="band-sliders">
-                      <label>
-                        no ≤
-                        <input
-                          type="range"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          value={thresholds[r.flag].no}
-                          aria-label={`${r.flag} no threshold`}
-                          onChange={(e) => setThreshold(r.flag, "no", Number(e.target.value))}
-                        />
-                        <output>{thresholds[r.flag].no.toFixed(2)}</output>
-                      </label>
-                      <label>
-                        yes ≥
-                        <input
-                          type="range"
-                          min={0}
-                          max={1}
-                          step={0.01}
-                          value={thresholds[r.flag].yes}
-                          aria-label={`${r.flag} yes threshold`}
-                          onChange={(e) => setThreshold(r.flag, "yes", Number(e.target.value))}
-                        />
-                        <output>{thresholds[r.flag].yes.toFixed(2)}</output>
-                      </label>
-                    </div>
                   </li>
                 ))}
               </ul>

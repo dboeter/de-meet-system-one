@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { parseRules } from "../../core/regex.ts";
 import { intent, intentRegexVerdict, readIntent, type IntentPreset } from "../../core/stations/intent.ts";
-import { Answer, Columns, EmailInput, Highlighted, JevDetails, JevOutcome, MeaningEditor, PresetChips, ProbBars, RulesEditor, StationHeader } from "../components.tsx";
+import { Answer, Columns, EmailInput, JevDetails, JevOutcome, JevQuestion, MeaningEditor, Pattern, PresetChips, ProbBars, RulesEditor, StationHeader } from "../components.tsx";
 import { useJev } from "../useJev.ts";
 import { startPreset, type ViewProps } from "../start.ts";
 
@@ -38,29 +38,32 @@ export function IntentView(props: ViewProps) {
         }}
       />
       <Columns
-        input={
-          <>
-            <EmailInput value={text} onChange={setText} onAsk={() => jev.run({ text })} />
-            {gold && (
-              <p className="gold">
-                Expected: <strong>{gold}</strong>. {preset?.note}
-              </p>
-            )}
-          </>
+        input={<EmailInput value={text} onChange={setText} onAsk={() => jev.run({ text })} marks={verdict?.span ? [verdict.span] : []} />}
+        note={
+          gold && (
+            <p className="gold">
+              Expected: <strong>{gold}</strong>. {preset?.note}
+            </p>
+          )
         }
         regex={
           <>
-            <RulesEditor value={rulesText} onChange={setRulesText} label="Keyword ladder" />
+            <p className="regex-kind">Keyword ladder, first match wins</p>
             {verdict && (
-              <>
-                <Answer label={verdict.label} correct={gold === undefined ? undefined : verdict.label === gold} />
-                <Highlighted text={text} spans={verdict.span ? [verdict.span] : []} />
-              </>
+              <Answer
+                label={verdict.label}
+                correct={gold === undefined ? undefined : verdict.label === gold}
+                detail={verdict.span ? `saw “${verdict.span.text}”` : "no keyword"}
+              />
             )}
+            <Pattern label="Pattern">
+              <RulesEditor value={rulesText} onChange={setRulesText} label="Keyword ladder" />
+            </Pattern>
           </>
         }
         jev={
           <>
+          <JevQuestion>{jev.wording.intent?.instructions}</JevQuestion>
           <JevOutcome result={jev.result}>
             {(ok) => {
               const reading = readIntent(ok.response);

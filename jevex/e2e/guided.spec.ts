@@ -23,7 +23,7 @@ test("the guided script runs end to end from recordings with the network blocked
     await expect(page.locator(".guided-title")).toHaveText(step.title);
 
     if (ANSWERING_VIEWS.has(step.view) && step.start?.kind !== "blank") {
-      await expect(page.getByTestId("usage")).toContainText("recorded");
+      await expect(page.getByTestId("jev-answer")).toHaveAttribute("data-source", "recorded");
     }
     if (step.view === "scoreboard") await expect(page.getByTestId("score-intent")).toContainText("%");
     if (step.view === "keep") await expect(page.getByTestId("keep-table")).toBeVisible();
