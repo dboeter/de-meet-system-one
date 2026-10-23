@@ -17,7 +17,7 @@ STATIONS = pd.DataFrame(
         ),
         (
             "Entity resolution",
-            "Pairs up likely candidates, merges on a matching KvK or IBAN",
+            "Pairs likely candidates, merges on a matching KvK or IBAN",
             "Are these two suppliers the same organisation?",
         ),
         (
@@ -59,27 +59,12 @@ def dq_judgments(mode: str):
 
 
 def dq_claim(result) -> str:
-    checks = result.manifest["checks"]
-    # The check that decides the run's status: fail_run before quarantine before warn.
-    severity = {"fail_run": 0, "quarantine": 1, "warn": 2}
-    fired = sorted(
-        (c for c in checks.items() if c[1]["triggered"]),
-        key=lambda c: severity.get(c[1]["action"], 3),
+    distinct = pd.DataFrame(result.rows).drop_duplicates(["check_id", "value"])
+    review = int((distinct["decision"] == "review").sum())
+    return (
+        f"Jev decides {len(distinct) - review} of {len(distinct)} distinct values on its own; "
+        f"{review} go to review."
     )
-    verdict = {
-        "failed": "The run stops",
-        "warn": "The run passes with a warning",
-    }.get(result.manifest["status"], "The run passes")
-    if fired:
-        cid, c = fired[0]
-        noun = CHECK_NAMES.get(cid, (cid, cid))[1]
-        headline = (
-            f"{verdict}: Jev rejects {ui.percent(c['fail_rate'])} of {noun}, "
-            f"over the {ui.percent(c['max_fail_rate'])} limit."
-        )
-    else:
-        headline = f"{verdict}: every check stays under its limit."
-    return headline
 
 
 # --- Entity resolution ---
@@ -194,12 +179,9 @@ CATEGORY_NAMES = {
     "health": "Health",
     "financial": "Finances",
     "address": "Home address",
-    "special_category": "Other sensitive (Art. 9)",
+    "special_category": "Other sensitive",
 }
-GATE = (
-    "This runs on synthetic notes only. Sending client text to an external API to find PII needs the "
-    "data-residency question settled first: retention, hosting region and the processing agreement."
-)
+GATE = "This runs on synthetic notes only."
 
 NOTES = pii.load_notes()
 HITS = {n["id"]: pii.regex_hits(n["text"]) for n in NOTES}
@@ -239,7 +221,7 @@ def pii_claim(routed: pd.DataFrame) -> str:
     by_regex = sum(bool(HITS[n["id"]]) for n in contextual)
     by_jev = sum(route[n["id"]] != "clear" for n in contextual)
     return (
-        f"Regex finds {by_regex} of the {len(contextual)} notes with personal details in plain words. "
+        f"Regex finds {by_regex} of the {len(contextual)} notes with personal details. "
         f"With Jev: {by_jev}."
     )
 

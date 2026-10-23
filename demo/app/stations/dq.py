@@ -28,12 +28,6 @@ ui.claim(finding, results.dq_claim(result))
 
 with left:
     a, b = st.columns(2)
-    a.metric("Run status", manifest["status"].upper())
-    b.metric(
-        "Quarantined",
-        len({r["row_id"] for r in result.quarantine}),
-        help="Rows held out of gold",
-    )
     a.metric(
         "Jev calls",
         first.asked,
@@ -42,6 +36,11 @@ with left:
     b.metric(
         "Review queue",
         int((decided["decision"] == "review").sum()),
+        help="(row, check) cells",
+    )
+    a.metric(
+        "Rejected",
+        int((decided["decision"] == "reject").sum()),
         help="(row, check) cells",
     )
 with chart:
@@ -81,49 +80,38 @@ def your_turn():
 with st.expander("Details"):
     st.subheader("Run manifest")
     st.dataframe(
-        pd.DataFrame(manifest["checks"]).T.rename_axis("check").reset_index(),
+        pd.DataFrame(manifest["checks"])
+        .T[["accept", "review", "reject"]]
+        .rename(index=results.check_label)
+        .rename_axis("check")
+        .reset_index(),
         hide_index=True,
-        column_config={
-            "fail_rate": st.column_config.NumberColumn(format="percent"),
-            "max_fail_rate": st.column_config.NumberColumn("limit", format="percent"),
-        },
     )
 
-    quarantine, review, codes, labels = st.tabs(
-        ["Quarantine", "Review queue", "Cancel reason → code", "Against our labels"]
+    tabs = st.tabs(
+        [results.check_label(c.id) for c in checks] + ["Jev versus our labels"]
     )
-    with quarantine:
-        st.caption(
-            "Rows Jev rejected on a quarantine or fail_run check. They stay out of gold until fixed."
-        )
-        st.dataframe(
-            pd.DataFrame(
-                result.quarantine, columns=["row_id", "check_id", "value", "p_pass"]
-            ),
-            hide_index=True,
-            column_config={"p_pass": ui.P_COLUMN},
-        )
-    with review:
-        st.caption("Jev wasn't sure: review instead of a silent accept or reject.")
-        st.dataframe(
-            decided[decided["decision"] == "review"].drop_duplicates(
-                ["check_id", "value"]
-            )[["check_id", "value", "p_pass", "code"]],
-            hide_index=True,
-            column_config={"p_pass": ui.P_COLUMN},
-        )
-    with codes:
-        st.caption(
-            "A Choice over the code list; other when none fits, which counts as failing."
-        )
-        st.dataframe(
-            decided[decided["check_id"] == "cancel_reason_code"].drop_duplicates(
-                "value"
-            )[["value", "code", "p_pass", "decision"]],
-            hide_index=True,
-            column_config={"p_pass": ui.P_COLUMN},
-        )
-    with labels:
+    # Review and reject first: those are the values someone looks at.
+    order = {"review": 0, "reject": 1, "accept": 2}
+    for check, tab in zip(checks, tabs[:-1], strict=True):
+        with tab:
+            if check.kind == "choice":
+                st.caption("other = fail")
+            values = (
+                decided[decided["check_id"] == check.id]
+                .drop_duplicates("value")
+                .assign(rank=lambda t: t["decision"].map(order))
+                .sort_values(["rank", "p_pass"])
+            )
+            st.dataframe(
+                values[
+                    ["value", "p_pass", "decision"]
+                    + (["code"] if check.kind == "choice" else [])
+                ],
+                hide_index=True,
+                column_config={"p_pass": ui.P_COLUMN},
+            )
+    with tabs[-1]:
         by_id = {r["row_id"]: r for r in rows}
         truth = {
             "address_is_postal": lambda r: r["is_address"],
@@ -145,6 +133,8 @@ with st.expander("Details"):
             auto.groupby("check_id")["correct"]
             .agg(["sum", "count"])
             .rename(columns={"sum": "correct", "count": "auto-decided"})
+            .rename(index=results.check_label)
+            .rename_axis("check")
         )
         st.markdown(f"Cancel codes matching the label: **{code_ok} of {len(mapped)}**")
 

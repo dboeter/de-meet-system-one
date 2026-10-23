@@ -872,9 +872,8 @@ STEPS = [
     Step(
         "Data quality",
         "Data quality at scale",
-        "This is where it plugs into a medallion pipeline: a run manifest per check, a limit on the fail "
-        "rate and an action. Product descriptions cross their limit, so fail_run fires. Answers are cached "
-        "per check and value, so tomorrow's run asks nothing new.",
+        "This is where it plugs into a medallion pipeline. Answers are cached per check and value, so "
+        "tomorrow's run asks nothing new.",
         dq_scale,
     ),
     Step(
@@ -928,8 +927,7 @@ STEPS = [
         "PII screening",
         "PII screening at scale",
         "Regex alone finds none of these notes. The threshold is low on purpose: a missed flag costs more "
-        "than a review. And the gate: this is synthetic data. Client text only after the data-residency "
-        "question is settled.",
+        "than a review. This is synthetic data.",
         pii_scale,
     ),
     Step(

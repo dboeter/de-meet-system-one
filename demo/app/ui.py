@@ -113,11 +113,21 @@ def strip(
     base = alt.Chart(df).transform_calculate(jitter="random()")
     encode = {
         "x": alt.X(f"{x}:Q", scale=alt.Scale(domain=[0, 1]), title=x_title),
-        "y": alt.Y(f"{y}:N", title=None, sort=None if jitter else "-x"),
+        "y": alt.Y(
+            f"{y}:N",
+            title=None,
+            sort=None if jitter else "-x",
+            # A line at each lane's edge, so jittered dot clouds read as separate rows;
+            # without padding the lanes meet and the first edge is the chart's own frame.
+            scale=alt.Scale(padding=0) if jitter else alt.Undefined,
+            axis=alt.Axis(grid=jitter, bandPosition=0, gridColor="#d4d4d4"),
+        ),
         "tooltip": tooltip,
     }
     if jitter:
-        encode["yOffset"] = alt.YOffset("jitter:Q")
+        encode["yOffset"] = alt.YOffset(
+            "jitter:Q", scale=alt.Scale(domain=[-0.15, 1.15])
+        )  # dots clear the lane edges
     if colour:
         present = [
             b for b in BUCKET_COLOURS if b in set(df[colour])

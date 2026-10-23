@@ -50,8 +50,8 @@ synthetic rows → code step (normalize / block / regex / shortlist / dedupe)
   true row at 0.68 instead of 0.87 and 5 review rows instead of 3. Splitting the cancel check
   into a pass Noul plus a code Choice: review 10 → 11 rows, lowest true row 0.53 → 0.40;
   the single Choice stays.
-- **Output:** per-row pass probability and flag, quarantine table, run-manifest fail rate;
-  one column crosses its threshold and `fail_run` fires. Show cache hits on a rerun.
+- **Output:** per-row pass probability and decision, accept/review/reject counts per check, a
+  tab of values per check and Jev against our labels. Show cache hits on a rerun.
 - **Live input:** a value plus a plain-language check.
 
 ### 2. Entity resolution
